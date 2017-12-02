@@ -4,9 +4,94 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MathematicalMorphology"
+        xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
+    <Grid x:Name="LayoutRoot">
+        <Grid.Resources>
+            <esri:SimpleMarkerSymbol x:Key="SMS" Color="Red" Style="Circle" Size="10" />
+            <esri:SimpleLineSymbol x:Key="SLS" Color="Red" Width="5" />
+            <esri:SimpleFillSymbol x:Key="SFS" Color="#66FF0000" Style="Solid" />
+            <esri:SimpleRenderer x:Key="MarkerRenderer" Symbol="{StaticResource SMS}" />
+            <esri:SimpleRenderer x:Key="PolylineRenderer" Symbol="{StaticResource SLS}" />
+            <esri:SimpleRenderer x:Key="PolygonRenderer" Symbol="{StaticResource SFS}" />
+        </Grid.Resources>
+        <esri:MapView Grid.Row="1" x:Name="MyMapView"  MapViewTapped="MyMapView_MapViewTapped">
+
+
+            <esri:Map>
+                <esri:Map.InitialViewpoint>
+                    <esri:ViewpointExtent XMin="-77.2302" 
+                                          YMin="38.7913" 
+                                          XMax="-76.9091" 
+                                          YMax="38.996"/>
+                </esri:Map.InitialViewpoint>
+                <esri:Map.Layers>
+                    <esri:ArcGISDynamicMapServiceLayer ServiceUri="http://services.arcgisonline.com/ArcGIS/rest/services/ESRI_StreetMap_World_2D/MapServer"/>
+                </esri:Map.Layers>
+
+            </esri:Map>
+            <esri:MapView.GraphicsOverlays>
+                <esri:GraphicsOverlay ID="PointGraphicsOverlay" Renderer="{StaticResource MarkerRenderer}" />
+                <esri:GraphicsOverlay ID="PolylineGraphicsOverlay" Renderer="{StaticResource PolylineRenderer}" />
+                <esri:GraphicsOverlay ID="PolygonGraphicsOverlay" Renderer="{StaticResource PolygonRenderer}" />
+            </esri:MapView.GraphicsOverlays>
+        </esri:MapView>
+        <Border Background="White"  BorderThickness="1" CornerRadius="5"
+				HorizontalAlignment="Right" VerticalAlignment="Top"
+				Margin="10" BorderBrush="Black">
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="Instructions" Margin="5" FontSize="16" FontWeight="Bold"/>
+                <TextBlock Margin="10" HorizontalAlignment="Center" FontSize="12" TextWrapping="Wrap">
+				- Select Shape and click Draw to start drawing. <LineBreak/>
+				<LineBreak/>
+				- Click on shape to select and click Edit to start editing.<LineBreak/>
+				<LineBreak/>
+				- Click on Yellow Handles to scale.<LineBreak/>
+				<LineBreak/>
+				- Click on white midpoints to add a new vertex.<LineBreak/>
+				<LineBreak/>
+				- Click on Blue Handles to rotate
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <Border Background="White" BorderThickness="1" CornerRadius="5"
+				HorizontalAlignment="Left" VerticalAlignment="Top"
+				Margin="10" BorderBrush="Black">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Grid.Row="1">
+                    <ComboBox x:Name="DrawShapes" 
+							  Padding="10" Margin="5"/>
+                    <Button Content="Draw" Click="OnDrawButtonClicked" 
+							Padding="10" Margin="5"/>
+                    <Button Content="Edit" Click="OnDrawButtonClicked" 
+							Padding="10" Margin="5" />
+                    <Button Content="Undo" Command="{Binding Editor.Undo, ElementName=MyMapView}" 
+							Padding="10" Margin="5"/>
+                    <Button Content="Redo" Command="{Binding Editor.Redo, ElementName=MyMapView}"
+							Padding="10" Margin="5"/>
+                    <Button Content="Cancel" Command="{Binding Editor.Cancel, ElementName=MyMapView}"
+							Padding="10" Margin="5"/>
+                    <Button Content="Complete" Command="{Binding Editor.Complete, ElementName=MyMapView}" 
+							Padding="10" Margin="5"/>
+                    <Button Content="Delete Selected Vertex" Command="{Binding Editor.DeleteVertex, ElementName=MyMapView}" 
+							Padding="10" Margin="5"/>
+                    <Button Content="Calculate Minkowski Sum" Command="{Binding CalculateMinkowskiSum}" CommandParameter="{Binding ElementName=MyMapView}" >
+                        
+                    </Button>
+                </StackPanel>
+                <StackPanel>
+                    <CheckBox x:Name="CanSelectManyFeatures" IsChecked="{Binding CanSelectManyFeatures}">                        
+                    </CheckBox>
+                </StackPanel>
+               
+            </Grid>
+        </Border>
     </Grid>
 </Window>
