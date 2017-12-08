@@ -50,7 +50,7 @@ namespace MathematicalMorphology.src.Utility
             return polygonBuilder.ToGeometry();
         }
 
-        public static Polygon CalculateMinkowskiSumNonConvexPolygons(this Polygon polygon1, Polygon polygon2, MapView mapview)
+        public static Polygon CalculateMinkowskiSumNonConvexPolygonsSecond(this Polygon polygon1, Polygon polygon2, MapView mapview)
         {
             var bottomLeft = polygon1.GetBottomLeftPoint();
             var bottomLeft2 = polygon2.GetBottomLeftPoint();
@@ -111,6 +111,104 @@ namespace MathematicalMorphology.src.Utility
             return GeometryEngine.Simplify(polygon.ToGeometry()) as Polygon;
         }
 
+
+        public static Polygon CalculateMinkowskiSumNonConvexPolygons(this Polygon polygon1, Polygon polygon2, MapView mapview)
+        {
+            var bottomLeft = polygon1.GetBottomLeftPoint();
+            var bottomLeft2 = polygon2.GetBottomLeftPoint();
+            MapPoint centerPoint = new MapPoint(0.0, 0.0, polygon1.SpatialReference);
+            var distance = bottomLeft.GetSalarDistance(centerPoint);
+            var distance2 = bottomLeft2.GetSalarDistance(centerPoint);
+            var a = TranslatePolygon(polygon1, distance);
+            var b = TranslatePolygon(polygon2, distance2);
+
+
+            var polygon = new PolygonBuilder(polygon1.SpatialReference);
+
+            var mapPointMap = new HashSet<MapPoint>(new MapPointEqualityComparison());
+            var modifiedBSegments = GetAugmentationForPolygon(a,b);
+            var modifiedASegments = GetAugmentationForPolygon(b, a);
+
+            var mapPointBSet = new HashSet<MapPoint>(new MapPointEqualityComparison());
+            
+            foreach(var segment in modifiedBSegments)
+            {
+                mapPointBSet.Add(segment.StartPoint);
+                mapPointBSet.Add(segment.EndPoint);
+            }
+
+            var mapPointASet = new HashSet<MapPoint>(new MapPointEqualityComparison());
+
+            foreach (var segment in modifiedASegments)
+            {
+                mapPointASet.Add(segment.StartPoint);
+                mapPointASet.Add(segment.EndPoint);
+            }
+
+            polygon.AddPoints(mapPointBSet);
+            polygon.AddPoints(mapPointASet);
+
+            return polygon.ToGeometry();// GeometryEngine.Simplify(polygon.ToGeometry()) as Polygon;
+        }
+
+        public static List<MapPoint> GetModifiedListOfMapPoints(Dictionary<Segment, List<MapPoint>> augmentationList)
+        {
+            var modifiedMapPoints = new List<MapPoint>();
+            foreach (var segment in augmentationList)
+            {
+                var modifiedSegmentStartPoint = segment.Key.StartPoint;
+                var modifiedSegmentEndPoint = segment.Key.EndPoint;
+                foreach (var mappoint in segment.Value)
+                {
+                    modifiedSegmentStartPoint = new MapPoint(modifiedSegmentStartPoint.X + mappoint.X, modifiedSegmentStartPoint.Y + mappoint.Y);
+                    modifiedSegmentEndPoint = new MapPoint(modifiedSegmentEndPoint.X + mappoint.Y, modifiedSegmentEndPoint.Y + mappoint.Y);
+                }
+                modifiedMapPoints.AddRange(new List<MapPoint> { modifiedSegmentStartPoint, modifiedSegmentEndPoint });
+            }
+
+            return modifiedMapPoints;
+        }
+
+        public static List<Segment> GetAugmentationForPolygon(Polygon polygonA, Polygon polygonB)
+        {
+            var modifiedSegments = new List<Segment>();
+            //points are sorted in clockwise order
+            for (var index = 0; index < polygonA.Parts.First().GetPoints().Count() - 1; index++)
+            {
+                var currentPoint = polygonA.Parts.First().GetPoint(index);
+                //last point is the same as the first point therefore get the second to last point (since that is the end)
+                var previousPoint = index - 1 < 0 ? polygonA.Parts.First().GetPoint(polygonA.Parts.First().GetPoints().Count() - 2) : polygonA.Parts.First().GetPoint(index - 1);
+                var nextPoint = index + 1 > polygonA.Parts.First().GetPoints().Count() ? polygonA.Parts.First().GetPoints().First() : polygonA.Parts.First().GetPoint(index + 1);
+
+                var previousSegment = new Esri.ArcGISRuntime.Geometry.LineSegment(previousPoint, currentPoint);
+                var nextSegment = new Esri.ArcGISRuntime.Geometry.LineSegment(currentPoint, nextPoint);
+
+                var segmentsToAlter = GetSegmentsWithinRange(previousSegment.CalculateAngle(), nextSegment.CalculateAngle(), polygonB);
+                foreach(var segment in segmentsToAlter)
+                {
+                    modifiedSegments.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(new MapPoint(segment.StartPoint.X + currentPoint.X, segment.StartPoint.Y + currentPoint.Y),
+                                                                                     new MapPoint(segment.EndPoint.X   + currentPoint.X, segment.EndPoint.Y   + currentPoint.Y)));
+                }
+               
+            }
+
+            return modifiedSegments;
+        }
+
+        public static List<Segment> GetSegmentsWithinRange(double lowerBound, double upperBound, Polygon polygon)
+        {
+            var segments = new List<Segment>();
+            foreach(var segment in polygon.Parts.First())
+            {
+                var angle = segment.CalculateAngle();
+                if(angle >= lowerBound || angle <= upperBound)
+                {
+                    segments.Add(segment);
+                }
+            }
+            return segments;
+        }
+
         public static MapPoint GetSharedPoint(this MinkowskiSegment segment1, MinkowskiSegment segment2)
         {
             if (segment1.IsPolygonA == segment2.IsPolygonA)
@@ -143,6 +241,11 @@ namespace MathematicalMorphology.src.Utility
             }
 
         }
+
+        //public static Dictionary<Segment,MapPoint> GetSharedPoints(this MinkowskiSegment segment1, MinkowskiSegment segment2)
+        //{
+            
+        //}
     }
 
 

@@ -45,8 +45,12 @@ namespace MathematicalMorphology.src
                 return;
             }
 
-            polygon.AddPolygonToMap(mapView, Colors.Snow);
+            polygon.AddPolygonToMap(mapView, Color.FromArgb(22, Colors.Snow.R, Colors.Snow.G, Colors.Snow.B));
             mapView.SetViewAsync(polygon);
+            FirstSelectedGraphic.IsSelected = false;
+            SecondSelectedGraphic.IsSelected = false;
+            FirstSelectedGraphic = null;
+            SecondSelectedGraphic = null;
         }  
 
         public Boolean CanSelectManyFeatures
