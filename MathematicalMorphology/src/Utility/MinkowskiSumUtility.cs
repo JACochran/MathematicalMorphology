@@ -126,7 +126,7 @@ namespace MathematicalMorphology.src.Utility
             var polygon = new PolygonBuilder(polygon1.SpatialReference);
 
             var mapPointMap = new HashSet<MapPoint>(new MapPointEqualityComparison());
-            var modifiedBSegments = GetAugmentationForPolygon(a,b);
+            var modifiedBSegments = GetAugmentationForPolygon(a, b);
             var modifiedASegments = GetAugmentationForPolygon(b, a);
 
             var mapPointBSet = new HashSet<MapPoint>(new MapPointEqualityComparison());
@@ -146,9 +146,109 @@ namespace MathematicalMorphology.src.Utility
             }
 
             polygon.AddPoints(mapPointBSet);
-            polygon.AddPoints(mapPointASet);
+            polygon.AddPoints(mapPointASet);            
 
-            return polygon.ToGeometry();// GeometryEngine.Simplify(polygon.ToGeometry()) as Polygon;
+            return SimplifyPolygon(polygon.ToGeometry());
+        }
+
+        private static Polygon SimplifyPolygon(Polygon polygon)
+        {
+            var polygonSimple = new PolygonBuilder(polygon.SpatialReference);
+            var outermostSegment = GetOuterMostSegment(polygon);
+            var closingPoint = outermostSegment.StartPoint;
+            bool isClosed = false;
+            polygonSimple.AddPoints(new List<MapPoint>() { outermostSegment.StartPoint, outermostSegment.EndPoint });
+            var currentSegment = outermostSegment;
+            while(isClosed == false)
+            {
+                var segmentsConnected = FindConnectedSegments(currentSegment, polygon);
+                var rightmostSegment = FindRightMostSegment(currentSegment, segmentsConnected);
+                polygonSimple.AddPoints(new List<MapPoint>() { rightmostSegment.StartPoint, rightmostSegment.EndPoint });
+                currentSegment = rightmostSegment;
+                if(currentSegment.EndPoint.IsEqual(outermostSegment.StartPoint))
+                {
+                    isClosed = true;
+                }
+            }
+
+            return polygonSimple.ToGeometry();
+        }
+
+        private static Segment FindRightMostSegment(Segment segment, List<Segment> connectedSegments)
+        {
+            var rightmostSegment = connectedSegments.First();
+            var rightmostAngle = CalculateAngle(segment, rightmostSegment);
+            foreach(var connectedSegment in connectedSegments)
+            {
+                var angle = CalculateAngle(segment, connectedSegment);
+                if(angle < rightmostAngle)
+                {
+                    rightmostSegment = connectedSegment;
+                    rightmostAngle = angle;
+                }
+            }
+
+            return rightmostSegment;
+        }
+
+        /// <summary>
+        /// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        private static double CalculateAngle(Segment start, Segment end)
+        {
+            var ABlength = GeometryEngine.Distance(start.StartPoint, start.EndPoint);
+            var BClength = GeometryEngine.Distance(start.EndPoint, end.EndPoint);
+            var vectors = DotProductVectors(start.StartPoint, start.EndPoint, end.EndPoint);
+            var vectorAB = vectors.Key; //1
+            var vectorBC = vectors.Value; //2
+            return Math.Atan2(vectorBC.Y, vectorBC.X) - Math.Atan2(vectorAB.Y, vectorAB.X);
+        }
+
+        private static KeyValuePair<MapPoint, MapPoint> DotProductVectors(MapPoint point1, MapPoint point2, MapPoint point3)
+        {
+            var vectorAB = new MapPoint(point2.X - point1.X, point2.Y - point1.Y);
+            var vectorBC = new MapPoint(point3.X - point2.X, point3.Y - point2.Y);
+            return new KeyValuePair<MapPoint, MapPoint>(vectorAB, vectorBC);
+        }
+
+        private static List<Segment> FindConnectedSegments(Segment outermostSegment, Polygon polygon)
+        {
+            return polygon.Parts
+                          .First()
+                          .Where(segment => segment.StartPoint.IsEqual(outermostSegment.EndPoint))                                        
+                          .ToList();
+        }
+
+        private static Segment GetOuterMostSegment(Polygon polygon)
+        {
+            var sortedPoints = polygon.Parts.First().GetPoints().Distinct(new MapPointEqualityComparison()).ToList();
+            sortedPoints.Sort((mp1, mp2) => mp1.Y.CompareTo(mp2.Y) == 0 ? mp1.X.CompareTo(mp2.X) : mp1.Y.CompareTo(mp2.Y));
+            var segmentsConnectedTo = polygon.Parts.First().Where(segment => segment.StartPoint.IsEqual(sortedPoints.First()) ||
+                                                                              segment.EndPoint.IsEqual(sortedPoints.First()));
+            var startPoint = sortedPoints.First();
+            sortedPoints.RemoveAt(0);
+            //this gets leftmost segment
+            foreach(var point in sortedPoints)
+            {
+                if (point.IsEqual(startPoint))
+                {
+                    continue;
+                }
+
+                foreach (var segment in segmentsConnectedTo)
+                {                   
+                    if ((segment.StartPoint.IsEqual(point) && segment.EndPoint.IsEqual(startPoint) ||
+                        (segment.EndPoint  .IsEqual(point) && segment.EndPoint.IsEqual(startPoint)  )))
+                    {
+                        return segment;
+                    }
+                }
+            }
+
+            return segmentsConnectedTo.First();
         }
 
         public static List<MapPoint> GetModifiedListOfMapPoints(Dictionary<Segment, List<MapPoint>> augmentationList)

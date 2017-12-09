@@ -8,7 +8,7 @@ namespace MathematicalMorphology.src.Utility
     public static class GeometryUtility
     {
 
-        private static double RadianToDegree(double angle)
+        public static double RadianToDegree(double angle)
         {
             return angle * (180.0 / Math.PI);
         }
@@ -30,7 +30,7 @@ namespace MathematicalMorphology.src.Utility
             return ConvertRange(degrees);
         }
 
-        private static double ConvertRange(double angle)
+        public static double ConvertRange(double angle)
         {
             return angle - 360.0 * Math.Floor(angle / 360.0);
         }
