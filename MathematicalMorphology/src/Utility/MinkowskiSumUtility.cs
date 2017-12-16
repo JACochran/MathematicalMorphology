@@ -69,36 +69,54 @@ namespace MathematicalMorphology.src.Utility
         /// <summary>
         /// This approach is the Convolution:
         /// 
-        /// This will calculate the Minkowski Sum by
+        /// This will calculate the Minkowski Sum by:
+        /// 
         /// For each vertex in Polygon A and Polygon B calculate the angle range
-        // For each vertex in Polygon A find the segments in B that are within the angle range and add that vertex to the segment’s start and end point
-        // For each vertex in Polygon B find the segments in Polygon A that are within the angle range and add that vertex to the segment’s start and end point
-        // The resulting polygon then needs to be simplified(more on how later!)
+        /// For each vertex in Polygon A find the segments in B that are within the angle range and add that vertex to the segment’s start and end point
+        /// For each vertex in Polygon B find the segments in Polygon A that are within the angle range and add that vertex to the segment’s start and end point
+        /// Take the resulting segments from the modification and calculate the Arrangement:
+        ///    The arrangement is essentially breaking up all the segments at their intersections
+        ///  Take the arrangement and find the outermost segment and traverse counter-clockwise to the connected segments
+        ///  tracing along the boundary of the arrangement.  
+        ///  the result is the Minkowksi Sum  
+        ///
+        /// 
         /// </summary>
-        /// <param name="polygon1"></param>
-        /// <param name="polygon2"></param>
-        /// <param name="mapview"></param>
-        /// <returns></returns>
-        public static Polygon CalculateMinkowskiSumNonConvexPolygons(this Polygon polygon1, Polygon polygon2, MapView mapview)
+        /// <param name="polygon1">first polygon</param>
+        /// <param name="polygon2">second polygon</param>
+        /// <returns>a polygon that is the minkowski sum of the two polygons passed in</returns>
+        public static Polygon CalculateMinkowskiSumNonConvexPolygons(this Polygon polygon1, Polygon polygon2)
         {
             var polygon = new PolygonBuilder(polygon1.SpatialReference);
-
-            var modifiedBSegments = GetAugmentationForPolygon(polygon1, polygon2, mapview);
-            var modifiedASegments = GetAugmentationForPolygon(polygon2, polygon1, mapview);
-
+            //For each vertex in Polygon A find the segments in B that are within the angle range and add that vertex to the segment’s start and end point
+            var modifiedBSegments = GetAugmentationForPolygon(polygon1, polygon2);
+            //For each vertex in Polygon B find the segments in Polygon A that are within the angle range and add that vertex to the segment’s start and end point
+            var modifiedASegments = GetAugmentationForPolygon(polygon2, polygon1);
+            //combine the list
             modifiedBSegments.AddRange(modifiedASegments);
-
+            //Take the resulting segments from the modification and calculate the Arrangement:
             var segments = BreakUpPolygon(modifiedBSegments);
 
-            return SimplifyPolygon(segments, mapview);
+            //trace the boundary of the arrangement
+            return SimplifyPolygon(segments);
         }
 
-        public static Polygon SimplifyPolygon(List<Segment> segments, MapView mapview)
+        /// <summary>
+        /// This will traverse the boundary of the arrangment.
+        /// 
+        /// First it will find a segment along the outside of the arrangement
+        /// Then it will traverse to through its connected segments choosing 
+        /// the right most segment to be part of the Minkowski sum.
+        /// 
+        /// It will continue until the polygon is fully closed.
+        /// </summary>
+        /// <param name="segments">the list of segments that are part of the arrangement</param>
+        /// <returns>the simplified polygon, only the boundary of the segments</returns>
+        public static Polygon SimplifyPolygon(List<Segment> segments)
         {
             var polygonSimple = new PolygonBuilder(segments.First().SpatialReference);
             var outermostSegment = GetOuterMostSegment(segments);
             
-            outermostSegment.AddSegmentToMap(mapview, Colors.DimGray, "Outermost Segment");
             var closingPoint = outermostSegment.StartPoint;
             bool isClosed = false;
             polygonSimple.AddPoints(new List<MapPoint>() { outermostSegment.StartPoint, outermostSegment.EndPoint });
@@ -169,21 +187,36 @@ namespace MathematicalMorphology.src.Utility
             throw new Exception("NO DUPSS");
         }
 
+        /// <summary>
+        /// Breaks up the list of segments until there are no more intersections (other than at their
+        /// connection points)
+        /// </summary>
+        /// <param name="segments">list of segments to break apart by their intersections</param>
+        /// <returns>list of segments that are broken by their intersections</returns>
         public static List<Segment> BreakUpPolygon(List<Segment> segments)
         {
+            //remove any duplicate segments
+            //otherwise there will be infinte intersections
             while (HasDuplicates(segments))
             {
                 segments = RemoveDuplicates(segments);
             }
             
+            //if there are no more intersections return the segments passed in
             if (SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
             {
                 return segments;
             }
 
+            //otherwise break up the polygon by the first intersection found
             return BreakUpPolygon(SegmentIntersectionUtility.SolveIntersections(segments));
         }
 
+        /// <summary>
+        /// Tests if a segment was created with the same start and end point
+        /// </summary>
+        /// <param name="seg1">segment to test</param>
+        /// <returns>true if its length is > 0, false otherwise</returns>
         private static bool SegmentIsValid(Segment seg1)
         {
             return seg1 != null && seg1.StartPoint.MapPointEpsilonEquals(seg1.EndPoint) == false;
@@ -208,6 +241,8 @@ namespace MathematicalMorphology.src.Utility
         /// <summary>
         /// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
         /// Calculates the angle between two connected 2D Vectors.
+        /// 
+        /// After converted to vectors:
         ///     start seg
         ///    .------>
         /// end|  inside angle
@@ -226,8 +261,8 @@ namespace MathematicalMorphology.src.Utility
         /// The start segments start point MUST be connected to
         /// end segment's End point
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
+        /// <param name="start">start segment</param>
+        /// <param name="end">end segment</param>
         /// <returns></returns>
         public static double CalculateAngle(Segment start, Segment end)
         {
@@ -246,13 +281,21 @@ namespace MathematicalMorphology.src.Utility
             return Vector2.GetAngle(AB, BC) * 180.0/Math.PI;
         }
 
-        private static List<Segment> FindConnectedSegments(Segment outermostSegment, List<Segment> segments)
+        /// <summary>
+        /// Finds the list of segments that is connected to the connected segment parameter passed in.
+        /// 
+        /// It will search through the list of potential connected segments from the list passed in.
+        /// </summary>
+        /// <param name="connectedSegment">Segment that we are looking to connect to</param>
+        /// <param name="segments">the list of potential connections</param>
+        /// <returns>a list of segments whose startpoint is connected to the connectedSegment's end point</returns>
+        private static List<Segment> FindConnectedSegments(Segment connectedSegment, List<Segment> segments)
         {
-            var connectedList = segments.Where(segment => segment.StartPoint.MapPointEpsilonEquals(outermostSegment.EndPoint)).ToList();
+            var connectedList = segments.Where(segment => segment.StartPoint.MapPointEpsilonEquals(connectedSegment.EndPoint)).ToList();
             foreach(var segment in segments)
             {
-                //reverse the segment if connected in wrong way
-                if(segment.EndPoint.MapPointEpsilonEquals(outermostSegment.EndPoint))
+                //reverse the segment if connected in wrong way (wrong way is not in counter-clockwise order)
+                if(segment.EndPoint.MapPointEpsilonEquals(connectedSegment.EndPoint))
                 {
                     connectedList.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(segment.EndPoint, segment.StartPoint));
                 }
@@ -261,6 +304,11 @@ namespace MathematicalMorphology.src.Utility
             return connectedList;
         }
 
+        /// <summary>
+        /// Gets the MapPoint whose X is the lowest value
+        /// </summary>
+        /// <param name="points">the list of points to search through</param>
+        /// <returns>the MapPoint with the lowest value</returns>
         public static MapPoint GetMinXPoint(List<MapPoint> points)
         {
             var minXPoint = points.First();
@@ -274,7 +322,13 @@ namespace MathematicalMorphology.src.Utility
             return minXPoint;
         }
 
-
+        /// <summary>
+        /// Gets the outermost segment (furthest east) if there
+        /// are two segments whose X's starts are the same, will pick the 
+        /// one with the least Y value end point
+        /// </summary>
+        /// <param name="segments"></param>
+        /// <returns></returns>
         public static Segment GetOuterMostSegment(List<Segment> segments)
         {
             var points = new List<MapPoint>();
@@ -311,7 +365,7 @@ namespace MathematicalMorphology.src.Utility
         /**
          * Polygon A vertices -> added to Polygon B segments
          */
-        public static List<Segment> GetAugmentationForPolygon(Polygon polygonA, Polygon polygonB, MapView mapView)
+        public static List<Segment> GetAugmentationForPolygon(Polygon polygonA, Polygon polygonB)
         {
             var modifiedSegments = new List<Segment>();
             //points are sorted in counter-clockwise order
@@ -339,12 +393,21 @@ namespace MathematicalMorphology.src.Utility
             return modifiedSegments;
         }
 
+        /// <summary>
+        /// Returns the segments that are within the angle range 
+        /// </summary>
+        /// <param name="lowerBound">lower angle bound in degrees (0, 360]</param>
+        /// <param name="upperBound">upper angle bound in degrees (0, 360]</param>
+        /// <param name="polygon">The polygon to find segments that are within that angle range</param>
+        /// <returns> Returns the segments that are within the angle range </returns>
         public static List<Segment> GetSegmentsWithinRange(double lowerBound, double upperBound, Polygon polygon)
         {
             var segments = new List<Segment>();
             foreach(var segment in polygon.Parts.First())
             {
                 var angle = segment.CalculateAngle();
+                //cases where the angle is behind
+                //this is for the reflex points in a polygon
                 if(lowerBound > upperBound)
                 {
                     if(angle >= lowerBound || angle <= upperBound)
@@ -352,6 +415,7 @@ namespace MathematicalMorphology.src.Utility
                         segments.Add(segment);
                     }
                 }
+                //otherwise treat as normal angle range
                 if(angle >= lowerBound && angle <= upperBound)
                 {
                     segments.Add(segment);

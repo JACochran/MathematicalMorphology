@@ -142,7 +142,7 @@ namespace MathematicalMorphology.src
                 {
                     polygonA = polygonA.RotatePolygon();
                 }
-                polygon = polygonA.CalculateMinkowskiSumNonConvexPolygons(polygonB, mapView);
+                polygon = polygonA.CalculateMinkowskiSumNonConvexPolygons(polygonB);
             }
             
             if(polygon == null)
@@ -161,12 +161,12 @@ namespace MathematicalMorphology.src
             get
             {
            
-                return this.canSelectManyFeatures;
+                return canSelectManyFeatures;
             }
 
             set
             {
-                this.canSelectManyFeatures = value;
+                canSelectManyFeatures = value;
                 OnPropertyChanged("CanSelectManyFeatures");
             }
 
@@ -186,12 +186,12 @@ namespace MathematicalMorphology.src
             get
             {
 
-                return this.firstSelectedGraphic;
+                return firstSelectedGraphic;
             }
 
             set
             {
-                this.firstSelectedGraphic = value;
+                firstSelectedGraphic = value;
                 OnPropertyChanged("FirstSelectedGraphic");
                 CalculateMinkowskiSum.RaiseCanExecuteChanged();
                 CalculateMinkowskiSumConvexHull.RaiseCanExecuteChanged();
@@ -207,12 +207,12 @@ namespace MathematicalMorphology.src
             get
             {
 
-                return this.secondSelectedGraphic;
+                return secondSelectedGraphic;
             }
 
             set
             {
-                this.secondSelectedGraphic = value;
+                secondSelectedGraphic = value;
                 OnPropertyChanged("SecondSelectedGraphic");
                 CalculateMinkowskiSum.RaiseCanExecuteChanged();
                 CalculateMinkowskiSumConvexHull.RaiseCanExecuteChanged();
