@@ -340,43 +340,10 @@ namespace MathematicalMorphology.src.Utility
             return false;
         }
 
-        private static List<Segment> FindIntersectingSegments(Segment rightmostSegment, Polygon polygon)
-        {
-            var segments = new List<Segment>();
-            var rightmostSegmentPolyline = rightmostSegment.ToPolyine();
-            foreach (var segment in polygon.Parts.First())
-            {
-                if (SegmentsIntersect(rightmostSegment, segment))
-                {
-                    var intersectionPoint = GetLineSegmentIntersection(segment, rightmostSegment);
-                    if (intersectionPoint == null)
-                    {
-                        continue;
-                    }
-                    segments.Add(new LineSegment(intersectionPoint, segment.EndPoint));
-                }
-            }
-
-            return segments;
-        }
-
         public static bool AnySegmentInstersect(List<Segment> segments)
         {
-            for (var index = 0; index < segments.Count; index++)
-            {
-                var firstSegment = segments[index];
-
-                for (var secondIndex = index + 1; secondIndex < segments.Count - 1; secondIndex++)
-                {
-                    var secondSegment = segments[secondIndex];
-
-                    if (SegmentsIntersect(firstSegment, secondSegment))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            var originalSize = segments.Count();
+            return MinkowskiSumUtility.SolveIntersections(segments).Count() > originalSize;
         }
 
     }

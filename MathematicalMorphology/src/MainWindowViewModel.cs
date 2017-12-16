@@ -104,12 +104,12 @@ namespace MathematicalMorphology.src
 
             foreach(var segment in polygonA.Parts.First())
             {
-                segment.AddSegmentToMap(mapview, Colors.Red, "Polygon A");
+                segment.AddSegmentToMap(mapview, Colors.Red, "Polygon A " + String.Format("\n{0:F5}", segment.CalculateAngle()));
             }
 
             foreach (var segment in polygonB.Parts.First())
             {
-                segment.AddSegmentToMap(mapview, Colors.Blue, "Polygon B");
+                segment.AddSegmentToMap(mapview, Colors.Blue, "Polygon B" + String.Format("\n{0:F5}", segment.CalculateAngle()));
             }
         }
 

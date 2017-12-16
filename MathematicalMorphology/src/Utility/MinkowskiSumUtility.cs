@@ -11,6 +11,16 @@ namespace MathematicalMorphology.src.Utility
     public static class MinkowskiSumUtility
     {
 
+        /// <summary>
+        /// Calculates the Minkowski Sum for two convex polygons.
+        /// 
+        /// If the polygons are non-convex this will produce an incorrect solution
+        /// 
+        /// </summary>
+        /// <param name="polygon1">first polygon</param>
+        /// <param name="polygon2">second polygon</param>
+        /// <param name="mapview">view to add the translated polygons (for visual effects only)</param>
+        /// <returns></returns>
         public static Polygon CalculateMinkowskiSumPolygons(this Polygon polygon1, Polygon polygon2, MapView mapview)
         {
             var bottomLeftPoint = polygon1.GetBottomLeftPoint();
@@ -25,7 +35,6 @@ namespace MathematicalMorphology.src.Utility
 
                     var translatedPolygon = polygon1.TranslatePolygon(distance);
 
-
                     sumParts.AddParts(translatedPolygon.Parts);
 
                     translatedPolygon.AddPolygonToMap(mapview, Colors.Purple);
@@ -37,6 +46,12 @@ namespace MathematicalMorphology.src.Utility
             return sumPolygon as Polygon;
         }
 
+        /// <summary>
+        /// Performs a translation of a polygon given a distance
+        /// </summary>
+        /// <param name="polygon1">the polygon to translate</param>
+        /// <param name="distance">the distance to move the polygon by (x and y value)</param>
+        /// <returns>a new polygon in the translated location</returns>
         public static Polygon TranslatePolygon(this Polygon polygon1, ScalarDistance distance)
         {
             var polygonBuilder = new PolygonBuilder(polygon1.SpatialReference);
@@ -51,6 +66,19 @@ namespace MathematicalMorphology.src.Utility
             return polygonBuilder.ToGeometry();
         }
 
+        /// <summary>
+        /// This approach is the Convolution:
+        /// 
+        /// This will calculate the Minkowski Sum by
+        /// For each vertex in Polygon A and Polygon B calculate the angle range
+        // For each vertex in Polygon A find the segments in B that are within the angle range and add that vertex to the segment’s start and end point
+        // For each vertex in Polygon B find the segments in Polygon A that are within the angle range and add that vertex to the segment’s start and end point
+        // The resulting polygon then needs to be simplified(more on how later!)
+        /// </summary>
+        /// <param name="polygon1"></param>
+        /// <param name="polygon2"></param>
+        /// <param name="mapview"></param>
+        /// <returns></returns>
         public static Polygon CalculateMinkowskiSumNonConvexPolygons(this Polygon polygon1, Polygon polygon2, MapView mapview)
         {
             var polygon = new PolygonBuilder(polygon1.SpatialReference);
@@ -91,7 +119,7 @@ namespace MathematicalMorphology.src.Utility
                     isClosed = true;
                 }
             }
-
+          
             var validSegments = new List<Segment>();
 
             foreach(var segment in polygonSimple.Parts.First())
@@ -143,12 +171,13 @@ namespace MathematicalMorphology.src.Utility
 
         public static List<Segment> BreakUpPolygon(List<Segment> segments)
         {
-            while(HasDuplicates(segments))
+            while (HasDuplicates(segments))
             {
                 segments = RemoveDuplicates(segments);
             }
-            
-            if(SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
+
+            Console.WriteLine("Break up poly: " + segments.Count());
+            if (SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
             {
                 return segments;
             }
@@ -157,7 +186,7 @@ namespace MathematicalMorphology.src.Utility
         }
 
         public static List<Segment> SolveIntersections(List<Segment> segments)
-        {
+        {          
             for (var index = 0; index < segments.Count; index++)
             {
                 var firstSegment = segments[index];
@@ -227,7 +256,9 @@ namespace MathematicalMorphology.src.Utility
                 }
             }
 
-            throw new ArgumentException("No segments intersect");
+            Console.WriteLine("NO INTERSECTIONS SHOULD STOP!");
+            return segments;
+            //throw new ArgumentException("No segments intersect");
         }
 
         private static bool SegmentIsValid(Segment seg1)
@@ -290,20 +321,6 @@ namespace MathematicalMorphology.src.Utility
             };
 
             return Vector2.GetAngle(AB, BC) * 180.0/Math.PI;
-        }
-
-        private static double To360(double value)
-        {
-            return (value + 360) % 360;
-        }
-
-        private static KeyValuePair<MapPoint, MapPoint> DotProductVectors(MapPoint point1, MapPoint point2, MapPoint point3)
-        {
-            var ABLength = GeometryEngine.Distance(point1, point2);
-            var BCLength = GeometryEngine.Distance(point2, point3);
-            var vectorAB = new MapPoint((point2.X - point1.X)/ABLength, (point2.Y - point1.Y)/ABLength);
-            var vectorBC = new MapPoint((point3.X - point2.X)/BCLength, (point3.Y - point2.Y)/BCLength);
-            return new KeyValuePair<MapPoint, MapPoint>(vectorAB, vectorBC);
         }
 
         private static List<Segment> FindConnectedSegments(Segment outermostSegment, List<Segment> segments)

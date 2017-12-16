@@ -33,7 +33,7 @@ namespace MathematicalMorphology.src.Utility
         {
             return Math.Abs(value - value2) <= epsilon;
         }
-               
+
         /**
          * Compares the start and end points of the two segments to see if they are
          * nearly equal with an epsilon value to account for floating point errors
@@ -41,12 +41,18 @@ namespace MathematicalMorphology.src.Utility
          * StartPoint == StartPoint
          * EndPoint == EndPoint
          * 
-         * Does not check if the start and end points are flip-flopped*
-         */ 
+         * or if
+         * StartPoint == EndPoint
+         * EndPoint == StartPoint
+         * 
+         * they are flip-flopped bc the order shouldn't matter if the segments are equal
+         */
         public static bool SegmentEpsilonEquals(this Segment segment, Segment segment2)
         {
-            return segment.StartPoint.MapPointEpsilonEquals(segment2.StartPoint) &&
-                   segment.EndPoint  .MapPointEpsilonEquals(segment2.EndPoint);
+            return (segment.StartPoint.MapPointEpsilonEquals(segment2.StartPoint) &&
+                    segment.EndPoint  .MapPointEpsilonEquals(segment2.EndPoint) )||
+                   (segment.StartPoint.MapPointEpsilonEquals(segment2.EndPoint) &&
+                    segment.EndPoint  .MapPointEpsilonEquals(segment2.StartPoint));
         }
 
         /**
@@ -139,37 +145,23 @@ namespace MathematicalMorphology.src.Utility
             return ConvertRange(degrees);
         }
 
-
+        /// <summary>
+        /// Converts an angle that is negative to an
+        /// equivalent value between [0, 360) degrees
+        /// </summary>
+        /// <param name="angle">the angle in degrees</param>
+        /// <returns>equivalent degree value between [0, 360)</returns>
         public static double ConvertRange(double angle)
         {
             return angle < 0 ? angle + 360.0 : angle;
         }
 
-        public static MapPoint GetTopRightPoint(this Polygon polygon)
-        {
-            var topRightPoint = polygon.Parts.First().First().StartPoint;
-            foreach (var part in polygon.Parts)
-            {
-                foreach (var point in part.GetPoints())
-                {
-                    if (point.Y > topRightPoint.Y)
-                    {
-                        topRightPoint = point;
-                    }
-                    else if (point.Y == topRightPoint.Y)
-                    {
-                        if (point.X > topRightPoint.X)
-                        {
-                            topRightPoint = point;
-                        }
-                    }
-
-                }
-            }
-
-            return topRightPoint;
-        }
-
+        /// <summary>
+        /// Finds the leftmost bottom point
+        /// 
+        /// </summary>
+        /// <param name="polygon">the polygon with all the points</param>
+        /// <returns> the leftmost bottom point</returns>
         public static MapPoint GetBottomLeftPoint(this Polygon polygon)
         {
             var bottomLeftPoint = polygon.Parts.First().StartPoint;
@@ -195,6 +187,11 @@ namespace MathematicalMorphology.src.Utility
             return bottomLeftPoint;
         }
 
+        /// <summary>
+        /// Returns a new polygon with its vertices ordered counter clockwise
+        /// </summary>
+        /// <param name="polygon">original polygon</param>
+        /// <returns>new polygon with re-ordered vertices counter-clockwise</returns>
         public static Polygon OrderVerticiesCounterClockwise(this Polygon polygon)
         {
             //https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
@@ -214,7 +211,13 @@ namespace MathematicalMorphology.src.Utility
             return reversed.ToGeometry();
         }
 
-
+        /// <summary>
+        /// Returns true if the vertices are ordered in counter-clockwise order
+        /// false otherwise
+        /// https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
+        /// </summary>
+        /// <param name="polygon">polygon to check</param>
+        /// <returns>true if the vertices are ordered in counter-clockwise order; false otherwise</returns>
         public static bool IsCounterClockwise(this Polygon polygon)
         {
             var sum = 0.0;
@@ -229,7 +232,14 @@ namespace MathematicalMorphology.src.Utility
             return sum <= 0.0;
         }
 
-
+        /// <summary>
+        /// Gets the distance from two points where the distance is negative if
+        /// traversing left or downwards
+        /// </summary>
+        /// <param name="fromPoint">from location</param>
+        /// <param name="toPoint">to location</param>
+        /// <returns>Gets the distance from two points where the distance is negative if
+        /// traversing left or downwards</returns>
         public static ScalarDistance GetSalarDistance(this MapPoint fromPoint, MapPoint toPoint)
         {
             return new ScalarDistance((fromPoint.X < toPoint.X ? 1 : -1) * GeometryEngine.Distance(new MapPoint(fromPoint.X, 0.0), new MapPoint(toPoint.X, 0.0)),

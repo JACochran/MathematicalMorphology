@@ -3,7 +3,6 @@ using Esri.ArcGISRuntime.Layers;
 using Esri.ArcGISRuntime.Symbology;
 using MathematicalMorphology.src;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,15 +21,7 @@ namespace MathematicalMorphology
             InitializeComponent();
             DrawShapes.ItemsSource = new DrawShape[]
             {
-                //DrawShape.Freehand,
-                //DrawShape.Point,
-                DrawShape.Polygon,
-                //DrawShape.Polyline,
-                ////DrawShape.Arrow,
-                //DrawShape.Circle,
-                //DrawShape.Ellipse,
-                //DrawShape.LineSegment,
-                //DrawShape.Rectangle
+                DrawShape.Polygon
             };
             DrawShapes.SelectedIndex = 0;
         }
