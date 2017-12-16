@@ -1,5 +1,6 @@
 ﻿using Esri.ArcGISRuntime.Controls;
 using Esri.ArcGISRuntime.Geometry;
+using MathematicalMorphology.src.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,144 +51,245 @@ namespace MathematicalMorphology.src.Utility
             return polygonBuilder.ToGeometry();
         }
 
-        public static Polygon CalculateMinkowskiSumNonConvexPolygonsSecond(this Polygon polygon1, Polygon polygon2, MapView mapview)
-        {
-            var bottomLeft = polygon1.GetBottomLeftPoint();
-            var bottomLeft2 = polygon2.GetBottomLeftPoint();
-            MapPoint centerPoint = new MapPoint(0.0, 0.0, polygon1.SpatialReference);
-            var distance = bottomLeft.GetSalarDistance(centerPoint);
-            var distance2 = bottomLeft2.GetSalarDistance(centerPoint);
-            var a = TranslatePolygon(polygon1, distance);
-            var b = TranslatePolygon(polygon2, distance2);
-
-            //clockwise sort
-            var sortedClockwisePolygon = a.Parts.First().ToList().Select(segment => new MinkowskiSegment(a, segment, true)).ToList();
-            sortedClockwisePolygon.AddRange(b.Parts.First().Select(segment => new MinkowskiSegment(b, segment, false)).ToList());
-            sortedClockwisePolygon.Sort(MinkowskiSegment.ClockwiseComparison);
-
-            MapPoint previousPoint = null;
-
-            var polygon = new PolygonBuilder(polygon1.SpatialReference);
-
-            var mapPointMap = new HashSet<MapPoint>(new MapPointEqualityComparison());
-
-            for (var index = 0; index < sortedClockwisePolygon.Count; index++)
-            {
-                var segment = sortedClockwisePolygon[index];
-
-                var previousSegment = sortedClockwisePolygon[index - 1 < 0 ? sortedClockwisePolygon.Count - 1 : index - 1];
-                var nextSegment = sortedClockwisePolygon[index + 1 >= sortedClockwisePolygon.Count ? 0 : index + 1];
-
-
-                MapPoint point = previousSegment.GetSharedPoint(nextSegment);
-                //which point to use?
-
-                segment.Segment.AddSegmentToMap(mapview, Colors.Chocolate, $"Original {index}");
-                var movedSegment = new List<MapPoint>(){
-                                                             new MapPoint(point.X + segment.Segment.StartPoint.X, point.Y + segment.Segment.StartPoint.Y),
-                                                             new MapPoint(point.X + segment.Segment.EndPoint.X, point.Y + segment.Segment.EndPoint.Y)
-                                                       };
-
-                if (previousPoint != null)
-                {
-                    if (previousPoint.IsEqual(movedSegment.First()))
-                    {
-                        movedSegment.RemoveAt(0);
-                    }
-                    else if (previousPoint.IsEqual(movedSegment.Last()))
-                    {
-                        movedSegment.RemoveAt(1);
-                    }
-                }
-
-                previousPoint = movedSegment.Last();
-                movedSegment.ForEach(mapPoint => mapPointMap.Add(mapPoint));
-
-                //AddSegmentToMap(new Esri.ArcGISRuntime.Geometry.LineSegment(movedSegment.First(), movedSegment.Last()), mapview, Colors.Coral, $"Moved {index}");
-                polygon.AddPoints(movedSegment);
-            }
-
-
-            return GeometryEngine.Simplify(polygon.ToGeometry()) as Polygon;
-        }
-
-
         public static Polygon CalculateMinkowskiSumNonConvexPolygons(this Polygon polygon1, Polygon polygon2, MapView mapview)
         {
-            var bottomLeft = polygon1.GetBottomLeftPoint();
-            var bottomLeft2 = polygon2.GetBottomLeftPoint();
-            MapPoint centerPoint = new MapPoint(0.0, 0.0, polygon1.SpatialReference);
-            var distance = bottomLeft.GetSalarDistance(centerPoint);
-            var distance2 = bottomLeft2.GetSalarDistance(centerPoint);
-            var a = TranslatePolygon(polygon1, distance);
-            var b = TranslatePolygon(polygon2, distance2);
-
-
             var polygon = new PolygonBuilder(polygon1.SpatialReference);
 
-            var mapPointMap = new HashSet<MapPoint>(new MapPointEqualityComparison());
-            var modifiedBSegments = GetAugmentationForPolygon(a, b);
-            var modifiedASegments = GetAugmentationForPolygon(b, a);
+            var modifiedBSegments = GetAugmentationForPolygon(polygon1, polygon2, mapview);
+            var modifiedASegments = GetAugmentationForPolygon(polygon2, polygon1, mapview);
 
-            var mapPointBSet = new HashSet<MapPoint>(new MapPointEqualityComparison());
-            
-            foreach(var segment in modifiedBSegments)
-            {
-                mapPointBSet.Add(segment.StartPoint);
-                mapPointBSet.Add(segment.EndPoint);
-            }
+            modifiedBSegments.AddRange(modifiedASegments);
 
-            var mapPointASet = new HashSet<MapPoint>(new MapPointEqualityComparison());
+            var segments = BreakUpPolygon(modifiedBSegments);
 
-            foreach (var segment in modifiedASegments)
-            {
-                mapPointASet.Add(segment.StartPoint);
-                mapPointASet.Add(segment.EndPoint);
-            }
-
-            polygon.AddPoints(mapPointBSet);
-            polygon.AddPoints(mapPointASet);            
-
-            return SimplifyPolygon(polygon.ToGeometry());
+            return SimplifyPolygon(segments, mapview);
         }
 
-        private static Polygon SimplifyPolygon(Polygon polygon)
+        public static Polygon SimplifyPolygon(List<Segment> segments, MapView mapview)
         {
-            var polygonSimple = new PolygonBuilder(polygon.SpatialReference);
-            var outermostSegment = GetOuterMostSegment(polygon);
+            var polygonSimple = new PolygonBuilder(segments.First().SpatialReference);
+            var outermostSegment = GetOuterMostSegment(segments);
+            
+            outermostSegment.AddSegmentToMap(mapview, Colors.DimGray, "Outermost Segment");
             var closingPoint = outermostSegment.StartPoint;
             bool isClosed = false;
             polygonSimple.AddPoints(new List<MapPoint>() { outermostSegment.StartPoint, outermostSegment.EndPoint });
+
             var currentSegment = outermostSegment;
+            var connectionPoint = currentSegment.EndPoint;
             while(isClosed == false)
             {
-                var segmentsConnected = FindConnectedSegments(currentSegment, polygon);
-                var rightmostSegment = FindRightMostSegment(currentSegment, segmentsConnected);
+                var segmentsConnected = FindConnectedSegments(currentSegment, segments);
+                
+                var rightmostSegment = FindRightMostSegment(currentSegment, segmentsConnected); 
+
                 polygonSimple.AddPoints(new List<MapPoint>() { rightmostSegment.StartPoint, rightmostSegment.EndPoint });
+
                 currentSegment = rightmostSegment;
-                if(currentSegment.EndPoint.IsEqual(outermostSegment.StartPoint))
+                if(currentSegment.EndPoint.MapPointEpsilonEquals(outermostSegment.StartPoint))// || closedList.Contains(currentSegment))
                 {
                     isClosed = true;
                 }
             }
 
-            return polygonSimple.ToGeometry();
+            var validSegments = new List<Segment>();
+
+            foreach(var segment in polygonSimple.Parts.First())
+            {
+                if(SegmentIsValid(segment))
+                {
+                    validSegments.Add(segment);
+                }
+            }
+
+            return new PolygonBuilder(validSegments).ToGeometry();
+        }
+ 
+        public static bool HasDuplicates(List<Segment> segments)
+        {
+            for(var index = 0; index < segments.Count; index++)
+            {
+                var currentSeg = segments[index];
+                for(var index2 = index +1; index2 < segments.Count -1; index2++)
+                {
+                    var secondSeg = segments[index2];
+                    if(secondSeg.IsEqual(currentSeg))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
-        private static Segment FindRightMostSegment(Segment segment, List<Segment> connectedSegments)
+        public static List<Segment> RemoveDuplicates(List<Segment> segments)
         {
+            for (var index = 0; index < segments.Count; index++)
+            {
+                var currentSeg = segments[index];
+                for (var index2 = index + 1; index2 < segments.Count - 1; index2++)
+                {
+                    var secondSeg = segments[index2];
+                    if (secondSeg.IsEqual(currentSeg))
+                    {
+                        segments.RemoveAt(index);
+                        return segments;
+                    }
+                }
+            }
+
+            throw new Exception("NO DUPSS");
+        }
+
+        public static List<Segment> BreakUpPolygon(List<Segment> segments)
+        {
+            while(HasDuplicates(segments))
+            {
+                segments = RemoveDuplicates(segments);
+            }
+          
+
+            if(SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
+            {
+                return segments;
+            }
+
+            return BreakUpPolygon(SolveIntersections(segments));
+        }
+
+        public static List<Segment> SolveIntersections(List<Segment> segments)
+        {
+            for (var index = 0; index < segments.Count; index++)
+            {
+                var firstSegment = segments[index];
+
+                for (var secondIndex = index + 1; secondIndex < segments.Count -1; secondIndex++)
+                {
+                    var secondSegment = segments[secondIndex];
+
+                    if (SegmentIntersectionUtility.SegmentsIntersect(firstSegment, secondSegment))
+                    {
+                        segments.RemoveAt(secondIndex);
+                        segments.RemoveAt(index);
+                        var brokenSegments = new List<Segment>();
+                        //3 segments
+                        if(SegmentIntersectionUtility.IsCollinear(firstSegment, secondSegment))
+                        {
+                            //make sure that the start and end points aren't the only things connecting them
+                            //2 segments for that
+                            //otherwise 3
+                            var points = new List<MapPoint>() { firstSegment.StartPoint, firstSegment.EndPoint, secondSegment.StartPoint, secondSegment.EndPoint };
+                            points.Sort((mp1, mp2) => mp1.X.CompareTo(mp2.X));
+                            brokenSegments.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(points[0], points[1]));
+                            brokenSegments.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(points[1], points[2]));
+                        }
+                        //3 segments
+                        else if(SegmentIntersectionUtility.IsTIntersection(firstSegment, secondSegment))
+                        {
+                            var intersectionPoint = SegmentIntersectionUtility.GetLineSegmentIntersection(firstSegment, secondSegment);
+                            //var seg1 = new Esri.ArcGISRuntime.Geometry.LineSegment(Math.Min)
+                            var segment1 = new Esri.ArcGISRuntime.Geometry.LineSegment(firstSegment.StartPoint, intersectionPoint);
+                            var segment2 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, firstSegment.EndPoint);
+                            var segment3 = new Esri.ArcGISRuntime.Geometry.LineSegment(secondSegment.StartPoint, intersectionPoint);
+                            var segment4 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, secondSegment.EndPoint);
+
+                            if(!segment1.StartPoint.MapPointEpsilonEquals(segment1.EndPoint))
+                            {
+                                brokenSegments.Add(segment1);
+                            }
+                            if (!segment2.StartPoint.MapPointEpsilonEquals(segment2.EndPoint))
+                            {
+                                brokenSegments.Add(segment2);
+                            }
+                            if (!segment3.StartPoint.MapPointEpsilonEquals(segment3.EndPoint))
+                            {
+                                brokenSegments.Add(segment3);
+                            }
+                            if (!segment4.StartPoint.MapPointEpsilonEquals(segment4.EndPoint))
+                            {
+                                brokenSegments.Add(segment4);
+                            }
+
+                        }
+                        else
+                        {
+                            var intersectionPoint = SegmentIntersectionUtility.GetLineSegmentIntersection(firstSegment, secondSegment);
+                            var segment1 = new Esri.ArcGISRuntime.Geometry.LineSegment(firstSegment.StartPoint, intersectionPoint);
+                            var segment2 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, firstSegment.EndPoint);
+                            var segment3 = new Esri.ArcGISRuntime.Geometry.LineSegment(secondSegment.StartPoint, intersectionPoint);
+                            var segment4 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, secondSegment.EndPoint);
+
+                            brokenSegments.AddRange(new List<Segment>() { segment1, segment2, segment3, segment4 });
+                        }
+                        
+                        segments.AddRange(brokenSegments);                        
+                        return segments;
+                    }
+                }
+            }
+
+            throw new ArgumentException("No segments intersect");
+        }
+
+        private static List<Segment> BreakSegments(MapPoint intersectionPoint, Segment firstSegment, Segment secondSegment)
+        {
+            var segments = new List<Segment>();
+
+            //collinear
+            if (SegmentIntersectionUtility.IsCollinear(firstSegment, secondSegment))
+            {
+                //break up segment 2 pieces
+                // collinear. Potentially infinite intersection points.
+                // Check and return one of them.
+                
+
+            }
+            //closely parallel
+
+
+            //meets
+
+            //crosses
+            else
+            {
+                //seg1 = new Esri.ArcGISRuntime.Geometry.LineSegment(firstSegment.StartPoint, intersectionPoint);
+                //seg2 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, firstSegment.EndPoint);
+                //seg3 = new Esri.ArcGISRuntime.Geometry.LineSegment(secondSegment.StartPoint, intersectionPoint);
+                //seg4 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, secondSegment.EndPoint);
+            }
+            
+            foreach(var segment in segments)
+            {
+                if(SegmentIsValid(segment) == false)
+                {
+                    throw new Exception("Invalid Segment detected");
+                }
+            }
+
+            return segments;
+        }
+
+        private static bool SegmentIsValid(Segment seg1)
+        {
+            return seg1 != null && seg1.StartPoint.IsEqual(seg1.EndPoint) == false;
+        }
+
+        public static Segment FindRightMostSegment(Segment segment, List<Segment> connectedSegments)
+        {
+            Console.WriteLine($"Right Most Segment From  (x1: {segment.StartPoint.X}, y1: {segment.StartPoint.Y}) (x2 : {segment.EndPoint.X}, y2: {segment.EndPoint.Y})");
             var rightmostSegment = connectedSegments.First();
             var rightmostAngle = CalculateAngle(segment, rightmostSegment);
             foreach(var connectedSegment in connectedSegments)
             {
                 var angle = CalculateAngle(segment, connectedSegment);
-                if(angle < rightmostAngle)
+                Console.WriteLine($"  ANGLE {angle} (x1: {connectedSegment.StartPoint.X}, y1: {connectedSegment.StartPoint.Y}) (x2 : {connectedSegment.EndPoint.X}, y2: {connectedSegment.EndPoint.Y})");
+                if (angle < rightmostAngle)
                 {
                     rightmostSegment = connectedSegment;
                     rightmostAngle = angle;
                 }
             }
-
+            Console.WriteLine($"  RightMost ANGLE {rightmostAngle} (x1: {rightmostSegment.StartPoint.X}, y1: {rightmostSegment.StartPoint.Y}) (x2 : {rightmostSegment.EndPoint.X}, y2: {rightmostSegment.EndPoint.Y})");
             return rightmostSegment;
         }
 
@@ -197,82 +299,107 @@ namespace MathematicalMorphology.src.Utility
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        private static double CalculateAngle(Segment start, Segment end)
+        public static double CalculateAngle(Segment start, Segment end)
         {
-            var ABlength = GeometryEngine.Distance(start.StartPoint, start.EndPoint);
-            var BClength = GeometryEngine.Distance(start.EndPoint, end.EndPoint);
-            var vectors = DotProductVectors(start.StartPoint, start.EndPoint, end.EndPoint);
-            var vectorAB = vectors.Key; //1
-            var vectorBC = vectors.Value; //2
-            return Math.Atan2(vectorBC.Y, vectorBC.X) - Math.Atan2(vectorAB.Y, vectorAB.X);
+            Vector2 AB = new Vector2()
+            {
+                X = end.StartPoint.X - start.StartPoint.X,
+                Y = end.StartPoint.Y - start.StartPoint.Y
+            };
+
+            Vector2 BC = new Vector2()
+            {
+                X = end.EndPoint.X - end.StartPoint.X,
+                Y = end.EndPoint.Y - end.StartPoint.Y
+            };
+		   var angle =  Vector2.GetAngle(AB, BC) * 180.0/Math.PI;
+
+            return Vector2.GetAngle(AB, BC) * 180.0/Math.PI;
+        }
+
+        private static double To360(double value)
+        {
+            return (value + 360) % 360;
         }
 
         private static KeyValuePair<MapPoint, MapPoint> DotProductVectors(MapPoint point1, MapPoint point2, MapPoint point3)
         {
-            var vectorAB = new MapPoint(point2.X - point1.X, point2.Y - point1.Y);
-            var vectorBC = new MapPoint(point3.X - point2.X, point3.Y - point2.Y);
+            var ABLength = GeometryEngine.Distance(point1, point2);
+            var BCLength = GeometryEngine.Distance(point2, point3);
+            var vectorAB = new MapPoint((point2.X - point1.X)/ABLength, (point2.Y - point1.Y)/ABLength);
+            var vectorBC = new MapPoint((point3.X - point2.X)/BCLength, (point3.Y - point2.Y)/BCLength);
             return new KeyValuePair<MapPoint, MapPoint>(vectorAB, vectorBC);
         }
 
-        private static List<Segment> FindConnectedSegments(Segment outermostSegment, Polygon polygon)
+        private static List<Segment> FindConnectedSegments(Segment outermostSegment, List<Segment> segments)
         {
-            return polygon.Parts
-                          .First()
-                          .Where(segment => segment.StartPoint.IsEqual(outermostSegment.EndPoint))                                        
-                          .ToList();
-        }
-
-        private static Segment GetOuterMostSegment(Polygon polygon)
-        {
-            var sortedPoints = polygon.Parts.First().GetPoints().Distinct(new MapPointEqualityComparison()).ToList();
-            sortedPoints.Sort((mp1, mp2) => mp1.Y.CompareTo(mp2.Y) == 0 ? mp1.X.CompareTo(mp2.X) : mp1.Y.CompareTo(mp2.Y));
-            var segmentsConnectedTo = polygon.Parts.First().Where(segment => segment.StartPoint.IsEqual(sortedPoints.First()) ||
-                                                                              segment.EndPoint.IsEqual(sortedPoints.First()));
-            var startPoint = sortedPoints.First();
-            sortedPoints.RemoveAt(0);
-            //this gets leftmost segment
-            foreach(var point in sortedPoints)
+            var connectedList = segments.Where(segment => segment.StartPoint.MapPointEpsilonEquals(outermostSegment.EndPoint)).ToList();
+            foreach(var segment in segments)
             {
-                if (point.IsEqual(startPoint))
+                //reverse the segment if connected in wrong way
+                if(segment.EndPoint.MapPointEpsilonEquals(outermostSegment.EndPoint))
                 {
-                    continue;
-                }
-
-                foreach (var segment in segmentsConnectedTo)
-                {                   
-                    if ((segment.StartPoint.IsEqual(point) && segment.EndPoint.IsEqual(startPoint) ||
-                        (segment.EndPoint  .IsEqual(point) && segment.EndPoint.IsEqual(startPoint)  )))
-                    {
-                        return segment;
-                    }
+                    connectedList.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(segment.EndPoint, segment.StartPoint));
                 }
             }
 
-            return segmentsConnectedTo.First();
+            return connectedList;
         }
 
-        public static List<MapPoint> GetModifiedListOfMapPoints(Dictionary<Segment, List<MapPoint>> augmentationList)
+        public static MapPoint GetMinXPoint(List<MapPoint> points)
         {
-            var modifiedMapPoints = new List<MapPoint>();
-            foreach (var segment in augmentationList)
+            var minXPoint = points.First();
+            foreach (var point in points)
             {
-                var modifiedSegmentStartPoint = segment.Key.StartPoint;
-                var modifiedSegmentEndPoint = segment.Key.EndPoint;
-                foreach (var mappoint in segment.Value)
+                if (point.X < minXPoint.X)
                 {
-                    modifiedSegmentStartPoint = new MapPoint(modifiedSegmentStartPoint.X + mappoint.X, modifiedSegmentStartPoint.Y + mappoint.Y);
-                    modifiedSegmentEndPoint = new MapPoint(modifiedSegmentEndPoint.X + mappoint.Y, modifiedSegmentEndPoint.Y + mappoint.Y);
+                    minXPoint = point;
                 }
-                modifiedMapPoints.AddRange(new List<MapPoint> { modifiedSegmentStartPoint, modifiedSegmentEndPoint });
+            }
+            return minXPoint;
+        }
+
+
+        public static Segment GetOuterMostSegment(List<Segment> segments)
+        {
+            var points = new List<MapPoint>();
+            foreach(var segment in segments)
+            {
+                points.Add(segment.StartPoint);
+                points.Add(segment.EndPoint);
             }
 
-            return modifiedMapPoints;
+            var minXPoint = GetMinXPoint(points);
+
+            var pointsConnectedTo = segments.Where(segment => segment.StartPoint.MapPointEpsilonEquals(minXPoint) ||
+                                                              segment.EndPoint  .MapPointEpsilonEquals(minXPoint))
+                                            .Select(segment => segment.StartPoint.MapPointEpsilonEquals(minXPoint) ? segment.EndPoint : segment.StartPoint);
+
+            var outerMostEnd = pointsConnectedTo.First();
+            foreach(var point in pointsConnectedTo)
+            {
+                if(point.X < outerMostEnd.X &&
+                   point.Y < outerMostEnd.Y)
+                {
+                    outerMostEnd = point;
+                }
+                else if(GeometryUtility.IsEqual(point.X, outerMostEnd.X) && 
+                        point.Y < outerMostEnd.Y)
+                {
+                    outerMostEnd = point;
+                }
+            }
+
+            return new Esri.ArcGISRuntime.Geometry.LineSegment(minXPoint, outerMostEnd);
         }
 
-        public static List<Segment> GetAugmentationForPolygon(Polygon polygonA, Polygon polygonB)
+        /**
+         * Polygon A vertices -> added to Polygon B segments
+         */
+        public static List<Segment> GetAugmentationForPolygon(Polygon polygonA, Polygon polygonB, MapView mapView)
         {
             var modifiedSegments = new List<Segment>();
-            //points are sorted in clockwise order
+            //points are sorted in counter-clockwise order
             for (var index = 0; index < polygonA.Parts.First().GetPoints().Count() - 1; index++)
             {
                 var currentPoint = polygonA.Parts.First().GetPoint(index);
@@ -286,8 +413,10 @@ namespace MathematicalMorphology.src.Utility
                 var segmentsToAlter = GetSegmentsWithinRange(previousSegment.CalculateAngle(), nextSegment.CalculateAngle(), polygonB);
                 foreach(var segment in segmentsToAlter)
                 {
-                    modifiedSegments.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(new MapPoint(segment.StartPoint.X + currentPoint.X, segment.StartPoint.Y + currentPoint.Y),
-                                                                                     new MapPoint(segment.EndPoint.X   + currentPoint.X, segment.EndPoint.Y   + currentPoint.Y)));
+                    var movedSegment = new Esri.ArcGISRuntime.Geometry.LineSegment(new MapPoint(segment.StartPoint.X + currentPoint.X, segment.StartPoint.Y + currentPoint.Y),
+                                                                                   new MapPoint(segment.EndPoint.X   + currentPoint.X, segment.EndPoint.Y + currentPoint.Y));
+                    modifiedSegments.Add(movedSegment);
+                    
                 }
                
             }
@@ -301,53 +430,19 @@ namespace MathematicalMorphology.src.Utility
             foreach(var segment in polygon.Parts.First())
             {
                 var angle = segment.CalculateAngle();
-                if(angle >= lowerBound || angle <= upperBound)
+                if(lowerBound > upperBound)
+                {
+                    if(angle >= lowerBound || angle <= upperBound)
+                    {
+                        segments.Add(segment);
+                    }
+                }
+                if(angle >= lowerBound && angle <= upperBound)
                 {
                     segments.Add(segment);
                 }
             }
             return segments;
-        }
-
-        public static MapPoint GetSharedPoint(this MinkowskiSegment segment1, MinkowskiSegment segment2)
-        {
-            if (segment1.IsPolygonA == segment2.IsPolygonA)
-            {
-                if (segment1.Segment.StartPoint.IsEqual(segment2.Segment.StartPoint))
-                {
-                    return segment1.Segment.StartPoint;
-                }
-                else if (segment1.Segment.StartPoint.IsEqual(segment2.Segment.EndPoint))
-                {
-                    return segment1.Segment.StartPoint;
-                }
-                else if (segment1.Segment.EndPoint.IsEqual(segment2.Segment.StartPoint))
-                {
-                    return segment1.Segment.EndPoint;
-                }
-                else if (segment1.Segment.EndPoint.IsEqual(segment2.Segment.EndPoint))
-                {
-                    return segment1.Segment.EndPoint;
-                }
-                else
-                {
-                    throw new ArgumentException("Points dont line up");
-                }
-
-            }
-            else
-            {
-                throw new ArgumentException("Invalid segments");
-            }
-
-        }
-
-        //public static Dictionary<Segment,MapPoint> GetSharedPoints(this MinkowskiSegment segment1, MinkowskiSegment segment2)
-        //{
-            
-        //}
-    }
-
-
-    
+        }     
+    }    
 }

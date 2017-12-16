@@ -21,10 +21,7 @@
 
             <esri:Map>
                 <esri:Map.InitialViewpoint>
-                    <esri:ViewpointExtent XMin="-77.2302" 
-                                          YMin="38.7913" 
-                                          XMax="-76.9091" 
-                                          YMax="38.996"/>
+                    <esri:ViewpointCenter X="0.0" Y="0.0"/>
                 </esri:Map.InitialViewpoint>
                 <esri:Map.Layers>
                     <esri:ArcGISDynamicMapServiceLayer ServiceUri="http://services.arcgisonline.com/ArcGIS/rest/services/ESRI_StreetMap_World_2D/MapServer"/>
@@ -37,24 +34,6 @@
                 <esri:GraphicsOverlay ID="PolygonGraphicsOverlay" Renderer="{StaticResource PolygonRenderer}" />
             </esri:MapView.GraphicsOverlays>
         </esri:MapView>
-        <Border Background="White"  BorderThickness="1" CornerRadius="5"
-				HorizontalAlignment="Right" VerticalAlignment="Top"
-				Margin="10" BorderBrush="Black">
-            <StackPanel Orientation="Vertical">
-                <TextBlock Text="Instructions" Margin="5" FontSize="16" FontWeight="Bold"/>
-                <TextBlock Margin="10" HorizontalAlignment="Center" FontSize="12" TextWrapping="Wrap">
-				- Select Shape and click Draw to start drawing. <LineBreak/>
-				<LineBreak/>
-				- Click on shape to select and click Edit to start editing.<LineBreak/>
-				<LineBreak/>
-				- Click on Yellow Handles to scale.<LineBreak/>
-				<LineBreak/>
-				- Click on white midpoints to add a new vertex.<LineBreak/>
-				<LineBreak/>
-				- Click on Blue Handles to rotate
-                </TextBlock>
-            </StackPanel>
-        </Border>
 
         <Border Background="White" BorderThickness="1" CornerRadius="5"
 				HorizontalAlignment="Left" VerticalAlignment="Top"
@@ -82,12 +61,21 @@
 							Padding="10" Margin="5"/>
                     <Button Content="Delete Selected Vertex" Command="{Binding Editor.DeleteVertex, ElementName=MyMapView}" 
 							Padding="10" Margin="5"/>
-                    <Button Content="Calculate Minkowski Sum" Command="{Binding CalculateMinkowskiSum}" CommandParameter="{Binding ElementName=MyMapView}" >
-                        
-                    </Button>
+                    
                 </StackPanel>
+                <StackPanel  Orientation="Horizontal" Grid.Row="2">
+                    <Button Content="Show Angles" Command="{Binding ShowAnglesCommand}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                    <Button Content="Modified Segments" Command="{Binding GetModifiedSegments}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                    <Button Content="Calculate Arrangement" Command="{Binding CalculateArrangement}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                    <Button Content="Simplify Polygon" Command="{Binding SimplifyPolygon}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                    <Button Content="Calculate Minkowski Sum Convolution" Command="{Binding CalculateMinkowskiSum}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                    <Button Content="Calculate Minkowski Sum Convex Hull" Command="{Binding CalculateMinkowskiSumConvexHull}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                   
+                    <Button Content="Clear All" Command="{Binding ClearAllCommand}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                </StackPanel>
+
                 <StackPanel>
-                    <CheckBox x:Name="CanSelectManyFeatures" IsChecked="{Binding CanSelectManyFeatures}">                        
+                    <CheckBox x:Name="CanSelectManyFeatures" Content="Select Many Features" IsChecked="{Binding CanSelectManyFeatures}">
                     </CheckBox>
                 </StackPanel>
                

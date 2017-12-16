@@ -25,12 +25,12 @@ namespace MathematicalMorphology
                 //DrawShape.Freehand,
                 //DrawShape.Point,
                 DrawShape.Polygon,
-                DrawShape.Polyline,
-                //DrawShape.Arrow,
-                DrawShape.Circle,
-                DrawShape.Ellipse,
-                DrawShape.LineSegment,
-                DrawShape.Rectangle
+                //DrawShape.Polyline,
+                ////DrawShape.Arrow,
+                //DrawShape.Circle,
+                //DrawShape.Ellipse,
+                //DrawShape.LineSegment,
+                //DrawShape.Rectangle
             };
             DrawShapes.SelectedIndex = 0;
         }

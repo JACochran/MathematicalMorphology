@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Esri.ArcGISRuntime.Geometry;
+using MathematicalMorphology.src.Utility;
 
 namespace MathematicalMorphology.src
 {
@@ -7,7 +8,7 @@ namespace MathematicalMorphology.src
     {
         public bool Equals(MapPoint x, MapPoint y)
         {
-            return x.IsEqual(y);
+            return x.MapPointEpsilonEquals(y);
         }
 
         public int GetHashCode(MapPoint obj)

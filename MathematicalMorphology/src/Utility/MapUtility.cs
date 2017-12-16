@@ -24,6 +24,35 @@ namespace MathematicalMorphology.src.Utility
             PolygonOverlay.Graphics.Add(graphic);
         }
 
+        public static void AddPolylineToMap(this Polyline polyline, MapView mapView, Color color)
+        {
+            var PolygonOverlay = mapView.GraphicsOverlays["PolylineGraphicsOverlay"];
+
+            var graphic = new Graphic(polyline);
+            var symbol = new SimpleLineSymbol()
+            {
+                Color = color
+            };
+            graphic.Symbol = symbol;
+
+            PolygonOverlay.Graphics.Add(graphic);
+        }
+
+
+        public static void AddPointToMap(this MapPoint point, MapView mapView, Color color)
+        {
+            var pointOverlay = mapView.GraphicsOverlays["PointGraphicsOverlay"];
+
+            var graphic = new Graphic() { Geometry = point };
+            var symbol = new SimpleMarkerSymbol()
+            {
+                Color = color
+            };
+            graphic.Symbol = symbol;
+
+            pointOverlay.Graphics.Add(graphic);
+        }
+
         public static void AddSegmentToMap(this Segment segment, MapView mapView, Color color, String label)
         {
             var polylineOverlay = mapView.GraphicsOverlays["PolylineGraphicsOverlay"];
@@ -31,9 +60,9 @@ namespace MathematicalMorphology.src.Utility
 
             // create a text symbol: define color, font, size, and text for the label
             var textSym = new TextSymbol();
-            textSym.Color = Colors.Red;
+            textSym.Color = Colors.Black;
             textSym.Font = new SymbolFont("Arial", 16);
-            textSym.Text = label + $"\n{segment.CalculateAngle()}";
+            textSym.Text = label + String.Format("\n{0:F5}", segment.CalculateAngle());
             textSym.Angle = -60;
             var textGraphic = new Graphic(new MapPoint((segment.StartPoint.X + segment.EndPoint.X) / 2.0, (segment.StartPoint.Y + segment.EndPoint.Y) / 2.0), textSym);
 

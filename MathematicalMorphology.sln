@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27004.2008
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathematicalMorphology", "MathematicalMorphology\MathematicalMorphology.csproj", "{0764EDA8-86F3-4AEB-9194-C55D3C43310A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathematicalMorphologyTests", "MathematicalMorphologyTests\MathematicalMorphologyTests.csproj", "{765F9D11-63C6-4FC8-B11F-9AFDDD06BEB9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{0764EDA8-86F3-4AEB-9194-C55D3C43310A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0764EDA8-86F3-4AEB-9194-C55D3C43310A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0764EDA8-86F3-4AEB-9194-C55D3C43310A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{765F9D11-63C6-4FC8-B11F-9AFDDD06BEB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{765F9D11-63C6-4FC8-B11F-9AFDDD06BEB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{765F9D11-63C6-4FC8-B11F-9AFDDD06BEB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{765F9D11-63C6-4FC8-B11F-9AFDDD06BEB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -73,10 +73,12 @@
     <Compile Include="src\MainWindowViewModel.cs" />
     <Compile Include="src\MapPointEqualityComparison.cs" />
     <Compile Include="src\MinkowskiSegment.cs" />
+    <Compile Include="src\models\Vector2.cs" />
     <Compile Include="src\ScalarDistance.cs" />
     <Compile Include="src\Utility\GeometryUtility.cs" />
     <Compile Include="src\Utility\MapUtility.cs" />
     <Compile Include="src\Utility\MinkowskiSumUtility.cs" />
+    <Compile Include="src\Utility\SegmentIntersectionUtility.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="MainWindow.xaml">

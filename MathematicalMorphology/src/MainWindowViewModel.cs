@@ -7,6 +7,7 @@ using Esri.ArcGISRuntime.Controls;
 using System.ComponentModel;
 using System.Windows.Media;
 using MathematicalMorphology.src.Utility;
+using System.Linq;
 
 namespace MathematicalMorphology.src
 {
@@ -19,6 +20,98 @@ namespace MathematicalMorphology.src
         public MainWindowViewModel()
         {
             CalculateMinkowskiSum = new RelayCommand<MapView>(ExecuteCalculateMinkowskiSum, CanExecuteMinkowskiSum);
+            CalculateMinkowskiSumConvexHull = new RelayCommand<MapView>(ExecuteCalculateMinkowskiSumConvexHull, CanExecuteMinkowskiSum);
+            GetModifiedSegments = new RelayCommand<MapView>(ExecuteGetModifiedSegments, CanExecuteMinkowskiSum);
+            ShowAnglesCommand = new RelayCommand<MapView>(ExecuteShowAngles, CanExecuteMinkowskiSum);
+            ClearAllCommand = new RelayCommand<MapView>(ExecuteClearMap);
+            CalculateArrangement = new RelayCommand<MapView>(ExecuteCalculateArrangement, CanExecuteMinkowskiSum);
+            SimplifyPolygon = new RelayCommand<MapView>(ExecuteSimplifyPolygon, CanExecuteMinkowskiSum);
+        }       
+
+        private void ExecuteSimplifyPolygon(MapView mapView)
+        {
+            var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var seg1 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB, mapView);
+            var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA, mapView);
+
+            seg1.AddRange(seg2);
+            var arrangement = MinkowskiSumUtility.BreakUpPolygon(seg1);
+            var polygon  = MinkowskiSumUtility.SimplifyPolygon(arrangement, mapView);
+            polygon.AddPolygonToMap(mapView, Color.FromArgb(70, Colors.Green.R, Colors.Green.G, Colors.Green.B));
+        }
+
+        private void ExecuteCalculateArrangement(MapView mapView)
+        {
+            var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var seg1 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB, mapView);
+            var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA, mapView);
+
+            seg1.AddRange(seg2);
+            var arrangement = MinkowskiSumUtility.BreakUpPolygon(seg1);
+            
+            foreach(var segment in arrangement)
+            {
+                segment.StartPoint.AddPointToMap(mapView, Colors.Red);
+                segment.EndPoint.AddPointToMap(mapView, Colors.Blue);
+                segment.AddSegmentToMap(mapView, Colors.Black, "");
+            }
+
+        }
+
+        private void ExecuteGetModifiedSegments(MapView mapView)
+        {
+            var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+
+            var segmentsA = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB, mapView);
+            var segmentsB = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA, mapView);
+
+            foreach(var segA in segmentsA)
+            {
+                segA.AddSegmentToMap(mapView, Colors.DarkGreen, "Modified by A verticies");
+            }
+
+            foreach (var segB in segmentsB)
+            {
+                segB.AddSegmentToMap(mapView, Colors.DarkGreen, "Modified by B verticies");
+            }
+
+        }
+
+        private void ExecuteCalculateMinkowskiSumConvexHull(MapView mapView)
+        {
+            var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var polygon = polygonA.CalculateMinkowskiSumPolygons(polygonB, mapView);
+            polygon.AddPolygonToMap(mapView, Color.FromArgb(55, Colors.LightBlue.R, Colors.LightBlue.G, Colors.LightBlue.B));
+        }
+
+        private void ExecuteClearMap(MapView mapview)
+        {
+            foreach(var overlay in mapview.GraphicsOverlays)
+            {
+                overlay.Graphics = new GraphicCollection();
+            }
+            firstSelectedGraphic = null;
+            SecondSelectedGraphic = null;
+        }
+
+        private void ExecuteShowAngles(MapView mapview)
+        {
+            var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+            var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
+
+            foreach(var segment in polygonA.Parts.First())
+            {
+                segment.AddSegmentToMap(mapview, Colors.Red, "Polygon A");
+            }
+
+            foreach (var segment in polygonB.Parts.First())
+            {
+                segment.AddSegmentToMap(mapview, Colors.Blue, "Polygon B");
+            }
         }
 
         private bool CanExecuteMinkowskiSum(MapView mapView)
@@ -27,17 +120,30 @@ namespace MathematicalMorphology.src
         }
 
         public RelayCommand<MapView> CalculateMinkowskiSum { get; set; }
+        public RelayCommand<MapView> CalculateMinkowskiSumConvexHull { get; private set; }
+        public RelayCommand<MapView> GetModifiedSegments { get; private set; }
+        public RelayCommand<MapView> ShowAnglesCommand { get; set; }
+        public RelayCommand<MapView> ClearAllCommand { get; set; }
+        public RelayCommand<MapView> CalculateArrangement { get; private set; }
+        public RelayCommand<MapView> SimplifyPolygon { get; private set; }
 
         private void ExecuteCalculateMinkowskiSum(MapView mapView)
         {
             var geometry1 = FirstSelectedGraphic.Geometry;
             var geometry2 = SecondSelectedGraphic.Geometry;
+
             Polygon polygon = null;
             if (geometry1 is Polygon && geometry2 is Polygon)
             {
-                polygon = ((Polygon)geometry1).CalculateMinkowskiSumNonConvexPolygons((Polygon)geometry2, mapView);
-                polygon.AddPolygonToMap(mapView, Colors.Tan);
-                polygon = ((Polygon)geometry1).CalculateMinkowskiSumPolygons((Polygon)geometry2, mapView);
+                //Order the vertices in the correct direction
+                var polygonA = (geometry1 as Polygon).OrderVerticiesCounterClockwise();
+                var polygonB = (geometry2 as Polygon).OrderVerticiesCounterClockwise();
+                //rotate if angles are too close
+                while(GeometryUtility.HasEqualSegmentAngles(polygonA, polygonB))
+                {
+                    polygonA = polygonA.RotatePolygon();
+                }
+                polygon = polygonA.CalculateMinkowskiSumNonConvexPolygons(polygonB, mapView);
             }
             
             if(polygon == null)
@@ -45,13 +151,11 @@ namespace MathematicalMorphology.src
                 return;
             }
 
-            polygon.AddPolygonToMap(mapView, Color.FromArgb(22, Colors.Snow.R, Colors.Snow.G, Colors.Snow.B));
+            polygon.AddPolygonToMap(mapView, Color.FromArgb(55, Colors.Snow.R, Colors.Snow.G, Colors.Snow.B));
             mapView.SetViewAsync(polygon);
-            FirstSelectedGraphic.IsSelected = false;
-            SecondSelectedGraphic.IsSelected = false;
-            FirstSelectedGraphic = null;
-            SecondSelectedGraphic = null;
         }  
+
+        
 
         public Boolean CanSelectManyFeatures
         {
@@ -91,6 +195,11 @@ namespace MathematicalMorphology.src
                 this.firstSelectedGraphic = value;
                 OnPropertyChanged("FirstSelectedGraphic");
                 CalculateMinkowskiSum.RaiseCanExecuteChanged();
+                CalculateMinkowskiSumConvexHull.RaiseCanExecuteChanged();
+                ShowAnglesCommand.RaiseCanExecuteChanged();
+                GetModifiedSegments.RaiseCanExecuteChanged();
+                CalculateArrangement.RaiseCanExecuteChanged();
+                SimplifyPolygon.RaiseCanExecuteChanged();
             }
         }
 
@@ -107,6 +216,11 @@ namespace MathematicalMorphology.src
                 this.secondSelectedGraphic = value;
                 OnPropertyChanged("SecondSelectedGraphic");
                 CalculateMinkowskiSum.RaiseCanExecuteChanged();
+                CalculateMinkowskiSumConvexHull.RaiseCanExecuteChanged();
+                ShowAnglesCommand.RaiseCanExecuteChanged();
+                GetModifiedSegments.RaiseCanExecuteChanged();
+                CalculateArrangement.RaiseCanExecuteChanged();
+                SimplifyPolygon.RaiseCanExecuteChanged();
             }
         }
     }
