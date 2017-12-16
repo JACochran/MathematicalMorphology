@@ -53,6 +53,13 @@ namespace MathematicalMorphology.src.Utility
             pointOverlay.Graphics.Add(graphic);
         }
 
+
+        public static Polyline ToPolyine(this Segment segment)
+        {
+            return new Polyline(new List<MapPoint>() { segment.StartPoint, segment.EndPoint });
+        }
+
+
         public static void AddSegmentToMap(this Segment segment, MapView mapView, Color color, String label)
         {
             var polylineOverlay = mapView.GraphicsOverlays["PolylineGraphicsOverlay"];

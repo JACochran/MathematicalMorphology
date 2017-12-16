@@ -346,14 +346,6 @@ namespace MathematicalMorphology.src.Utility
             var rightmostSegmentPolyline = rightmostSegment.ToPolyine();
             foreach (var segment in polygon.Parts.First())
             {
-                //if (segment.StartPoint.IsEqual(rightmostSegment.StartPoint) ||
-                //   segment.StartPoint.IsEqual(rightmostSegment.EndPoint) ||
-                //   segment.EndPoint.IsEqual(rightmostSegment.StartPoint) ||
-                //   segment.EndPoint.IsEqual(rightmostSegment.EndPoint))
-                //{
-                //    continue;
-                //}
-
                 if (SegmentsIntersect(rightmostSegment, segment))
                 {
                     var intersectionPoint = GetLineSegmentIntersection(segment, rightmostSegment);

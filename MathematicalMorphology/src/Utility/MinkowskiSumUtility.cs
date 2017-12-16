@@ -147,8 +147,7 @@ namespace MathematicalMorphology.src.Utility
             {
                 segments = RemoveDuplicates(segments);
             }
-
-            Console.WriteLine("Size break up polygon " + segments.Count);
+            
             if(SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
             {
                 return segments;
@@ -231,44 +230,6 @@ namespace MathematicalMorphology.src.Utility
             throw new ArgumentException("No segments intersect");
         }
 
-        private static List<Segment> BreakSegments(MapPoint intersectionPoint, Segment firstSegment, Segment secondSegment)
-        {
-            var segments = new List<Segment>();
-
-            //collinear
-            if (SegmentIntersectionUtility.IsCollinear(firstSegment, secondSegment))
-            {
-                //break up segment 2 pieces
-                // collinear. Potentially infinite intersection points.
-                // Check and return one of them.
-                
-
-            }
-            //closely parallel
-
-
-            //meets
-
-            //crosses
-            else
-            {
-                //seg1 = new Esri.ArcGISRuntime.Geometry.LineSegment(firstSegment.StartPoint, intersectionPoint);
-                //seg2 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, firstSegment.EndPoint);
-                //seg3 = new Esri.ArcGISRuntime.Geometry.LineSegment(secondSegment.StartPoint, intersectionPoint);
-                //seg4 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, secondSegment.EndPoint);
-            }
-            
-            foreach(var segment in segments)
-            {
-                if(SegmentIsValid(segment) == false)
-                {
-                    throw new Exception("Invalid Segment detected");
-                }
-            }
-
-            return segments;
-        }
-
         private static bool SegmentIsValid(Segment seg1)
         {
             return seg1 != null && seg1.StartPoint.MapPointEpsilonEquals(seg1.EndPoint) == false;
@@ -276,25 +237,40 @@ namespace MathematicalMorphology.src.Utility
 
         public static Segment FindRightMostSegment(Segment segment, List<Segment> connectedSegments)
         {
-            Console.WriteLine($"Right Most Segment From  (x1: {segment.StartPoint.X}, y1: {segment.StartPoint.Y}) (x2 : {segment.EndPoint.X}, y2: {segment.EndPoint.Y})");
             var rightmostSegment = connectedSegments.First();
             var rightmostAngle = CalculateAngle(segment, rightmostSegment);
             foreach(var connectedSegment in connectedSegments)
             {
                 var angle = CalculateAngle(segment, connectedSegment);
-                Console.WriteLine($"  ANGLE {angle} (x1: {connectedSegment.StartPoint.X}, y1: {connectedSegment.StartPoint.Y}) (x2 : {connectedSegment.EndPoint.X}, y2: {connectedSegment.EndPoint.Y})");
                 if (angle < rightmostAngle)
                 {
                     rightmostSegment = connectedSegment;
                     rightmostAngle = angle;
                 }
             }
-            Console.WriteLine($"  RightMost ANGLE {rightmostAngle} (x1: {rightmostSegment.StartPoint.X}, y1: {rightmostSegment.StartPoint.Y}) (x2 : {rightmostSegment.EndPoint.X}, y2: {rightmostSegment.EndPoint.Y})");
             return rightmostSegment;
         }
 
         /// <summary>
         /// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
+        /// Calculates the angle between two connected 2D Vectors.
+        ///     start seg
+        ///    .------>
+        /// end|  inside angle
+        /// seg|
+        ///    V
+        /// 
+        /// 
+        /// 
+        /// outside
+        /// angle   end seg
+        ///         .------>
+        ///    start| 
+        ///    seg  |
+        ///         V
+        ///         
+        /// The start segments start point MUST be connected to
+        /// end segment's End point
         /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
@@ -312,7 +288,6 @@ namespace MathematicalMorphology.src.Utility
                 X = end.EndPoint.X - end.StartPoint.X,
                 Y = end.EndPoint.Y - end.StartPoint.Y
             };
-		   var angle =  Vector2.GetAngle(AB, BC) * 180.0/Math.PI;
 
             return Vector2.GetAngle(AB, BC) * 180.0/Math.PI;
         }

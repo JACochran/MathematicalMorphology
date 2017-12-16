@@ -79,8 +79,6 @@
     <Compile Include="src\Utility\MapUtility.cs" />
     <Compile Include="src\Utility\MinkowskiSumUtility.cs" />
     <Compile Include="src\Utility\SegmentIntersectionUtility.cs" />
-    <Compile Include="ViewModel\MainViewModel.cs" />
-    <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
