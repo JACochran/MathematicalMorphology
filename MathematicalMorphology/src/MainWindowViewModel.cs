@@ -55,7 +55,7 @@ namespace MathematicalMorphology.src
             {
                 segment.StartPoint.AddPointToMap(mapView, Colors.Red);
                 segment.EndPoint.AddPointToMap(mapView, Colors.Blue);
-                segment.AddSegmentToMap(mapView, Colors.Black, "");
+                //segment.AddSegmentToMap(mapView, Colors.Black, "");
             }
 
         }
