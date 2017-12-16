@@ -32,12 +32,12 @@ namespace MathematicalMorphology.src
         {
             var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
             var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
-            var seg1 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB, mapView);
-            var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA, mapView);
+            var seg1 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB);
+            var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA);
 
             seg1.AddRange(seg2);
             var arrangement = MinkowskiSumUtility.BreakUpPolygon(seg1);
-            var polygon  = MinkowskiSumUtility.SimplifyPolygon(arrangement, mapView);
+            var polygon  = MinkowskiSumUtility.SimplifyPolygon(arrangement);
             polygon.AddPolygonToMap(mapView, Color.FromArgb(70, Colors.Green.R, Colors.Green.G, Colors.Green.B));
         }
 
@@ -45,8 +45,8 @@ namespace MathematicalMorphology.src
         {
             var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
             var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
-            var seg1 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB, mapView);
-            var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA, mapView);
+            var seg1 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB);
+            var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA);
 
             seg1.AddRange(seg2);
             var arrangement = MinkowskiSumUtility.BreakUpPolygon(seg1);
@@ -65,8 +65,8 @@ namespace MathematicalMorphology.src
             var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
             var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
 
-            var segmentsA = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB, mapView);
-            var segmentsB = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA, mapView);
+            var segmentsA = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB);
+            var segmentsB = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA);
 
             foreach(var segA in segmentsA)
             {
@@ -150,7 +150,7 @@ namespace MathematicalMorphology.src
                 return;
             }
 
-            polygon.AddPolygonToMap(mapView, Color.FromArgb(55, Colors.Snow.R, Colors.Snow.G, Colors.Snow.B));
+            polygon.AddPolygonToMap(mapView, Color.FromArgb(75, Colors.Snow.R, Colors.Snow.G, Colors.Snow.B));
             mapView.SetViewAsync(polygon);
         }  
 

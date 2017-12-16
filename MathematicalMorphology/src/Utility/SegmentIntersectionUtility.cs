@@ -8,40 +8,86 @@ namespace MathematicalMorphology.src.Utility
 {
     public static class SegmentIntersectionUtility
     {
+        /// <summary>
+        /// Returns true if the segments interesect,
+        /// false otherwise.
+        /// 
+        /// Segments are NOT considered intersecting if the are connected
+        /// at their start or end points!!!!!!
+        /// </summary>
+        /// <param name="segment1">fist segment</param>
+        /// <param name="segment2">second segment</param>
+        /// <returns>true if the segments are intersecting (this includes overlapping)</returns>
         public static bool SegmentsIntersect(Segment segment1, Segment segment2)
         {
             return GetLineSegmentIntersection(segment1, segment2) != null;
-        }
+        }       
 
-        public enum SegmentIntersectionType
-        {
-            Meets,
-            Crosses,
-            Parallel,
-            Colinear,
-            NoIntersection
-        }
-
+        /// <summary>
+        /// Subtracts the two vectors coords
+        /// </summary>
+        /// <param name="vector1">first vector</param>
+        /// <param name="vector2">second vector</param>
+        /// <returns>difference between the two vectors</returns>
         public static Vector2 Sub(MapPoint vector1, MapPoint vector2)
         {
             return new Vector2() { X = vector1.X - vector2.X, Y = vector1.Y - vector2.Y };
         }
 
+        /// <summary>
+        /// Adds the two vectors
+        /// </summary>
+        /// <param name="vector1">first vector</param>
+        /// <param name="vector2">second vector</param>
+        /// <returns>the point where it is added</returns>
         public static MapPoint Add(MapPoint vector1, MapPoint vector2)
         {
             return new MapPoint(vector1.X + vector2.X, vector1.Y + vector2.Y);
         }
 
-        public static MapPoint ScalarMult(double s, Vector2 v)
+        /// <summary>
+        /// Multiplies the vector by the scalar value
+        /// </summary>
+        /// <param name="scalarValue">scalar value to mutliply the vector with</param>
+        /// <param name="vector">the vector to multiply to</param>
+        /// <returns>the point with the scalar multiplication applied</returns>
+        public static MapPoint ScalarMult(double scalarValue, Vector2 vector)
         {
-            return new MapPoint(s * v.X, s * v.Y);
+            return new MapPoint(scalarValue * vector.X, scalarValue * vector.Y);
         }
 
-        public static bool IsCollinear(Segment start, Segment end)
+        /// <summary>
+        /// Returns true if the two segments are Colinear
+        /// </summary>
+        /// <param name="start">start segment</param>
+        /// <param name="end">end segment</param>
+        /// <returns>true if they are colinear false otherwise</returns>
+        public static bool IsColinear(Segment start, Segment end)
         {
             return IsParallel(start, end) && IsOverlapping(start, end);
         }
-        
+
+        /// <summary>
+        /// Returns true if the two segments are overlapping
+        ///  
+        /// Note: pictures are just to help, do not need to be horizontal lines, can detect at any slope
+        /// 
+        /// Overlaps = true
+        ///     |------|  start
+        /// |------|      end
+        ///
+        /// Overlaps = true
+        ///|-------------| start
+        ///    |----|      end
+        ///    
+        /// Overlaps = false
+        ///|---|           start
+        ///        |---|   end
+        ///    
+        /// </summary>
+        /// <param name="start">start segment</param>
+        /// <param name="end">end segment</param>
+        /// <returns></returns>
         public static bool IsOverlapping(Segment start, Segment end)
         {
             if(IsParallel(start, end))
@@ -62,7 +108,12 @@ namespace MathematicalMorphology.src.Utility
                 return false;
             }
         }
-
+        /// <summary>
+        /// Returns true if the segments are parallel
+        /// </summary>
+        /// <param name="start">start segment</param>
+        /// <param name="end">end segment</param>
+        /// <returns></returns>
         public static bool IsParallel(Segment start, Segment end)
         {
             //check horizontal and vertical lines first
@@ -86,15 +137,50 @@ namespace MathematicalMorphology.src.Utility
             }
         }
 
+        /// <summary>
+        /// calculates the slope of the segment
+        /// </summary>
+        /// <param name="segment">the segment</param>
+        /// <returns>the slope of the segment</returns>
         public static double GetSlope(Segment segment)
         {
             return (segment.EndPoint.Y - segment.StartPoint.Y) / (segment.EndPoint.X - segment.StartPoint.X);
         }
 
-        //strictly crossing, not overlaps
+        /// <summary>
+        /// Strictly crossing intersections, Overlapping would return false.
+        /// 
+        /// It also does not consider segments whose start and end points are the intersection points as crossing ("L" shape intersections)
+        /// 
+        /// Crossing = false
+        /// .--------  start
+        /// |
+        /// |
+        /// |
+        /// end
+        /// 
+        /// Crossing = true
+        ///       end
+        ///       |
+        /// |---- |------| start
+        ///       |
+        ///       
+        ///  Crossing = true
+        ///       end       
+        /// |---- |------| start
+        ///       |
+        ///      
+        /// crossing = false
+        ///     |------|  start
+        /// |------|      end
+        ///
+        /// </summary>
+        /// <param name="start">start segment</param>
+        /// <param name="end">end segment</param>
+        /// <returns>true if the segments are crossing, false otherwise</returns>
         public static bool IsCrossing(Segment start, Segment end)
         {
-            if(IsCollinear(start, end))
+            if(IsColinear(start, end))
             {
                 return false;
             }
@@ -185,6 +271,26 @@ namespace MathematicalMorphology.src.Utility
             return false;
         }
 
+        /// <summary>
+        /// Checks if the intersection is at the start or end points of the segment
+        /// (which creates an "L" shape)
+        /// 
+        /// L intersection = true
+        /// .--------  start
+        /// |
+        /// |
+        /// |
+        /// end
+        /// 
+        /// L Intersection = false
+        ///       end       
+        /// |---- |------| start
+        ///       |
+        ///       |
+        /// </summary>
+        /// <param name="start">start segment</param>
+        /// <param name="end">end segment</param>
+        /// <returns>true if the intersection is an L shape, false otherwise</returns>
         private static bool IsLIntersection(Segment start, Segment end)
         {
             return (start.StartPoint.MapPointEpsilonEquals(end.StartPoint) ||
@@ -283,16 +389,35 @@ namespace MathematicalMorphology.src.Utility
             return false;
         }
 
+        /// <summary>
+        /// True if the segment is vertical, false otherwise
+        /// </summary>
+        /// <param name="segment">segment</param>
+        /// <returns>True if the segment is vertical, false otherwise</returns>
         public static bool IsVertical(Segment segment)
         {
             return GeometryUtility.IsEpsilonEquals(segment.StartPoint.X, segment.EndPoint.X);
         }
 
+        /// <summary>
+        /// True if the segment is horizontal, false otherwise
+        /// </summary>
+        /// <param name="segment">segment</param>
+        /// <returns>True if the segment is horizontal, false otherwise</returns>
         public static bool IsHorizontal(Segment segment)
         {
             return GeometryUtility.IsEpsilonEquals(segment.StartPoint.Y, segment.EndPoint.Y);
         }
 
+        /// <summary>
+        /// Gets the intersection point of the two segments.
+        /// Does not consider a valid intersection if it is NOT crossing (check IsCrossing Documentation for further description)
+        /// If the segments are not crossing, will return null
+        /// otherwise will return the intersection point
+        /// </summary>
+        /// <param name="start">start segment</param>
+        /// <param name="end">end segment</param>
+        /// <returns>the intersection point if they are crossing, null otherwise</returns>
         public static MapPoint GetLineSegmentIntersection(Segment start, Segment end)
         {
             if(IsCrossing(start, end) == false)
@@ -328,23 +453,26 @@ namespace MathematicalMorphology.src.Utility
             return intersection;         
         }
 
-        // Given three colinear points p, q, r, the function checks if
-        // point q lies on line segment 'pr'
-         public static bool OnSegment(MapPoint p, MapPoint q, MapPoint r)
-        {
-            if (q.X <= Math.Max(p.X, r.X) && q.X >= Math.Min(p.X, r.X) &&
-                q.Y <= Math.Max(p.Y, r.Y) && q.Y >= Math.Min(p.Y, r.Y))
-                return true;
-
-            return false;
-        }
-
+        /// <summary>
+        /// Returns true if any segments intersect with one another (with our definition of intersection, look at IsCrossing documentation
+        /// for further clarification), false otherwise
+        /// </summary>
+        /// <param name="segments">list of segments to check for intersections</param>
+        /// <returns>true if any are intersecting, false otherwise</returns>
         public static bool AnySegmentInstersect(List<Segment> segments)
         {
             var originalSize = segments.Count();
             return SolveIntersections(segments).Count() > originalSize;
         }
 
+        /// <summary>
+        /// Will break up the list of segments at the first found intersection.
+        /// 
+        /// Does not return a fully non-intersecting list of segments, must be called recursively 
+        /// to achieve no intersections in the entire list.
+        /// </summary>
+        /// <param name="segments">list of segments which contain at least one intersection</param>
+        /// <returns>the list of segments with one less intersection point</returns>
         public static List<Segment> SolveIntersections(List<Segment> segments)
         {
             for (var index = 0; index < segments.Count; index++)
@@ -361,7 +489,7 @@ namespace MathematicalMorphology.src.Utility
                         segments.RemoveAt(index);
                         var brokenSegments = new List<Segment>();
                         //3 segments
-                        if (IsCollinear(firstSegment, secondSegment))
+                        if (IsColinear(firstSegment, secondSegment))
                         {
                             //make sure that the start and end points aren't the only things connecting them
                             //2 segments for that

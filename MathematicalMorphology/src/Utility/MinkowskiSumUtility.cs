@@ -151,6 +151,13 @@ namespace MathematicalMorphology.src.Utility
             return new PolygonBuilder(validSegments).ToGeometry();
         }
  
+        /// <summary>
+        /// returns true if any of the segments are copies of one another
+        ///  returns false if all segments are unique
+        /// 
+        /// </summary>
+        /// <param name="segments">list of segments to check</param>
+        /// <returns>true if there are segments that are copies of one another, false otherwise</returns>
         public static bool HasDuplicates(List<Segment> segments)
         {
             for(var index = 0; index < segments.Count; index++)
@@ -168,6 +175,12 @@ namespace MathematicalMorphology.src.Utility
             return false;
         }
 
+        /// <summary>
+        /// Removes all the duplicated segments from the given list
+        /// Will throw if there are no duplicates in the list!!
+        /// </summary>
+        /// <param name="segments">the list of segments that contain duplicates</param>
+        /// <returns>the modified list of segments without duplicates</returns>
         public static List<Segment> RemoveDuplicates(List<Segment> segments)
         {
             for (var index = 0; index < segments.Count; index++)
@@ -184,7 +197,7 @@ namespace MathematicalMorphology.src.Utility
                 }
             }
 
-            throw new Exception("NO DUPSS");
+            throw new Exception("NO Duplicates exist in the list, when RemoveDuplicates were called.");
         }
 
         /// <summary>

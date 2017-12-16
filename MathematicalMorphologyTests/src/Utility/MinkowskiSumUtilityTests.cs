@@ -479,7 +479,7 @@ namespace MathematicalMorphology.src.Utility.Tests
                                                                  ModifySegment(mapPoint8, segments2[0])                                                                 
                                                                };
 
-            var actualSegments = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA, null);
+            var actualSegments = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA);
 
             //1
             Assert.IsTrue(actualSegments[0].SegmentEpsilonEquals(expectedModifiedSegments[0]));
@@ -502,7 +502,7 @@ namespace MathematicalMorphology.src.Utility.Tests
                                                                   ModifySegment(mapPoint5, segments8[0])
                                                                };
 
-            var actualSegments2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB, null);
+            var actualSegments2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB);
 
             Assert.IsTrue(actualSegments2[0].SegmentEpsilonEquals(expectedModifiedSegments2[0]));
             Assert.IsTrue(actualSegments2[1].SegmentEpsilonEquals(expectedModifiedSegments2[1]));
@@ -676,24 +676,24 @@ namespace MathematicalMorphology.src.Utility.Tests
             var overlapSegment = new LineSegment(diagonalPoint1, diagonalPoint3);
             var overlapSegment2 = new LineSegment(diagonalPoint2, diagonalPoint4);
 
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(overlapSegment, overlapSegment2));
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(overlapSegment2, overlapSegment));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(overlapSegment, overlapSegment2));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(overlapSegment2, overlapSegment));
 
             //|-------------|
             //    |----|
             var withinSegment = new LineSegment(diagonalPoint1, diagonalPoint4);
             var withinSegment2 = new LineSegment(diagonalPoint2, diagonalPoint3);
 
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(withinSegment, withinSegment2));
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(withinSegment2, withinSegment));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(withinSegment, withinSegment2));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(withinSegment2, withinSegment));
             
             //|---|
             //       |---|
             var separateSegment = new LineSegment(diagonalPoint1, diagonalPoint2);
             var separateSegment2 = new LineSegment(diagonalPoint3, diagonalPoint4);
 
-            Assert.IsFalse(SegmentIntersectionUtility.IsCollinear(separateSegment, separateSegment2));
-            Assert.IsFalse(SegmentIntersectionUtility.IsCollinear(separateSegment2, separateSegment));
+            Assert.IsFalse(SegmentIntersectionUtility.IsColinear(separateSegment, separateSegment2));
+            Assert.IsFalse(SegmentIntersectionUtility.IsColinear(separateSegment2, separateSegment));
 
             var horizontalPoint1 = new MapPoint(0, 0);
             var horizontalPoint2 = new MapPoint(1, 0);
@@ -705,24 +705,24 @@ namespace MathematicalMorphology.src.Utility.Tests
             var overlapSegmentHorizontal = new LineSegment(horizontalPoint1, horizontalPoint3);
             var overlapSegmentHorizontal2 = new LineSegment(horizontalPoint2, horizontalPoint4);
 
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(overlapSegmentHorizontal, overlapSegmentHorizontal2));
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(overlapSegmentHorizontal2, overlapSegmentHorizontal));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(overlapSegmentHorizontal, overlapSegmentHorizontal2));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(overlapSegmentHorizontal2, overlapSegmentHorizontal));
 
             //|-------------|
             //    |----|
             var withinSegmentHorizontal = new LineSegment(horizontalPoint1, horizontalPoint4);
             var withinSegmentHorizontal2 = new LineSegment(horizontalPoint2, horizontalPoint3);
             
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(withinSegmentHorizontal, withinSegmentHorizontal2));
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(withinSegmentHorizontal2, withinSegmentHorizontal));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(withinSegmentHorizontal, withinSegmentHorizontal2));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(withinSegmentHorizontal2, withinSegmentHorizontal));
 
             //|---|
             //       |---|
             var separateSegmentHorizontal = new LineSegment(horizontalPoint1, horizontalPoint2);
             var separateSegmentHorizontal2 = new LineSegment(horizontalPoint3, horizontalPoint4);
             
-            Assert.IsFalse(SegmentIntersectionUtility.IsCollinear(separateSegmentHorizontal, separateSegmentHorizontal2));
-            Assert.IsFalse(SegmentIntersectionUtility.IsCollinear(separateSegmentHorizontal2, separateSegmentHorizontal));
+            Assert.IsFalse(SegmentIntersectionUtility.IsColinear(separateSegmentHorizontal, separateSegmentHorizontal2));
+            Assert.IsFalse(SegmentIntersectionUtility.IsColinear(separateSegmentHorizontal2, separateSegmentHorizontal));
             
             var verticalPoint1 = new MapPoint(0,0);
             var verticalPoint2 = new MapPoint(0,1);
@@ -734,24 +734,24 @@ namespace MathematicalMorphology.src.Utility.Tests
             var overlapSegmentVertical = new LineSegment(verticalPoint1, verticalPoint3);
             var overlapSegmentVertical2 = new LineSegment(verticalPoint2, verticalPoint4);
             
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(overlapSegmentVertical, overlapSegmentVertical2));
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(overlapSegmentVertical2, overlapSegmentVertical));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(overlapSegmentVertical, overlapSegmentVertical2));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(overlapSegmentVertical2, overlapSegmentVertical));
 
             //|-------------|
             //    |----|
             var withinSegmentVertical = new LineSegment(verticalPoint1, verticalPoint4);
             var withinSegmentVertical2 = new LineSegment(verticalPoint2, verticalPoint3);
             
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(withinSegmentVertical, withinSegmentVertical2));
-            Assert.IsTrue(SegmentIntersectionUtility.IsCollinear(withinSegmentVertical2, withinSegmentVertical));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(withinSegmentVertical, withinSegmentVertical2));
+            Assert.IsTrue(SegmentIntersectionUtility.IsColinear(withinSegmentVertical2, withinSegmentVertical));
 
             //|---|
             //       |---|
             var separateSegmentVertical = new LineSegment(verticalPoint1, verticalPoint2);
             var separateSegmentVertical2 = new LineSegment(verticalPoint3, verticalPoint4);
 
-            Assert.IsFalse(SegmentIntersectionUtility.IsCollinear(separateSegmentVertical, separateSegmentVertical2));
-            Assert.IsFalse(SegmentIntersectionUtility.IsCollinear(separateSegmentVertical2, separateSegmentVertical));
+            Assert.IsFalse(SegmentIntersectionUtility.IsColinear(separateSegmentVertical, separateSegmentVertical2));
+            Assert.IsFalse(SegmentIntersectionUtility.IsColinear(separateSegmentVertical2, separateSegmentVertical));
 
         }
 
