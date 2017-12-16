@@ -62,7 +62,7 @@ namespace MathematicalMorphology.src.Utility
             var textSym = new TextSymbol();
             textSym.Color = Colors.Black;
             textSym.Font = new SymbolFont("Arial", 16);
-            textSym.Text = label + String.Format("\n{0:F5}", segment.CalculateAngle());
+            textSym.Text = label;// + String.Format("\n{0:F5}", segment.CalculateAngle());
             textSym.Angle = -60;
             var textGraphic = new Graphic(new MapPoint((segment.StartPoint.X + segment.EndPoint.X) / 2.0, (segment.StartPoint.Y + segment.EndPoint.Y) / 2.0), textSym);
 

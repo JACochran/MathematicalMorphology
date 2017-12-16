@@ -17,7 +17,7 @@ namespace MathematicalMorphology.src.Utility
             return $" ({value.X}, {value.Y})";
         }
 
-        public static bool IsEqual(double value, double value2, double epsilon = Epsilon)
+        public static bool IsEpsilonEquals(double value, double value2, double epsilon = Epsilon)
         {
             return Math.Abs(value - value2) <= epsilon;
         }
@@ -32,7 +32,7 @@ namespace MathematicalMorphology.src.Utility
 
         public static bool MapPointEpsilonEquals(this MapPoint mapPoint, MapPoint mapPoint2)
         {
-            return IsEqual(mapPoint.X, mapPoint2.X) && IsEqual(mapPoint.Y, mapPoint2.Y);
+            return IsEpsilonEquals(mapPoint.X, mapPoint2.X) && IsEpsilonEquals(mapPoint.Y, mapPoint2.Y);
         }
 
         public const double RotationAngle = 0.5;
@@ -49,7 +49,7 @@ namespace MathematicalMorphology.src.Utility
             {
                 foreach (var segmentB in polygonB.Parts.First())
                 {
-                    if (IsEqual(segmentA.CalculateAngle(), segmentB.CalculateAngle()))
+                    if (IsEpsilonEquals(segmentA.CalculateAngle(), segmentB.CalculateAngle()))
                     {
                         return true;
                     }
@@ -130,7 +130,7 @@ namespace MathematicalMorphology.src.Utility
                 {
                     if (point.X <= bottomLeftPoint.X)
                     {
-                        if(GeometryUtility.IsEqual(point.X, bottomLeftPoint.X))
+                        if(GeometryUtility.IsEpsilonEquals(point.X, bottomLeftPoint.X))
                         {
                             bottomLeftPoint = point.Y < bottomLeftPoint.Y ? point : bottomLeftPoint;
                         }

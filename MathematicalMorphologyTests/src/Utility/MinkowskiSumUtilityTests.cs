@@ -759,7 +759,7 @@ namespace MathematicalMorphology.src.Utility.Tests
 
         public bool IsEqualXYCoordinates(MapPoint point1, MapPoint point2)
         {
-            return GeometryUtility.IsEqual(point1.X,point2.X, GeometryUtility.Epsilon) && GeometryUtility.IsEqual(point1.Y, point2.Y, GeometryUtility.Epsilon);
+            return GeometryUtility.IsEpsilonEquals(point1.X,point2.X, GeometryUtility.Epsilon) && GeometryUtility.IsEpsilonEquals(point1.Y, point2.Y, GeometryUtility.Epsilon);
         }
     }
 }

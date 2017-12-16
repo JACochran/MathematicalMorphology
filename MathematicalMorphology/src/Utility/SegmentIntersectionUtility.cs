@@ -83,7 +83,7 @@ namespace MathematicalMorphology.src.Utility
                 var m1 = GetSlope(start);
                 var m2 = GetSlope(end);
 
-                return GeometryUtility.IsEqual(m1, m2);
+                return GeometryUtility.IsEpsilonEquals(m1, m2);
             }
         }
 
@@ -120,8 +120,8 @@ namespace MathematicalMorphology.src.Utility
                 if (IsHorizontal(start))
                 {
                     //3 Y's equal?
-                    if(GeometryUtility.IsEqual(end.StartPoint.Y, start.EndPoint.Y) ||
-                       GeometryUtility.IsEqual(end.EndPoint.Y, start.EndPoint.Y))
+                    if(GeometryUtility.IsEpsilonEquals(end.StartPoint.Y, start.EndPoint.Y) ||
+                       GeometryUtility.IsEpsilonEquals(end.EndPoint.Y, start.EndPoint.Y))
                     {
                         return true;
                     }                    
@@ -130,8 +130,8 @@ namespace MathematicalMorphology.src.Utility
                 if (IsHorizontal(end))
                 {
                     //3 Y's equal?
-                    if (GeometryUtility.IsEqual(start.StartPoint.Y, end.EndPoint.Y) ||
-                        GeometryUtility.IsEqual(start.EndPoint.Y, end.EndPoint.Y))
+                    if (GeometryUtility.IsEpsilonEquals(start.StartPoint.Y, end.EndPoint.Y) ||
+                        GeometryUtility.IsEpsilonEquals(start.EndPoint.Y, end.EndPoint.Y))
                     {
                         return true;
                     }
@@ -141,8 +141,8 @@ namespace MathematicalMorphology.src.Utility
                 if(IsVertical(start))
                 {
                     //3 X's equal?
-                    if (GeometryUtility.IsEqual(end.StartPoint.X, start.EndPoint.X) ||
-                        GeometryUtility.IsEqual(end.EndPoint.X, start.EndPoint.X))
+                    if (GeometryUtility.IsEpsilonEquals(end.StartPoint.X, start.EndPoint.X) ||
+                        GeometryUtility.IsEpsilonEquals(end.EndPoint.X, start.EndPoint.X))
                     {
                         return true;
                     }
@@ -152,8 +152,8 @@ namespace MathematicalMorphology.src.Utility
                 if (IsVertical(end))
                 {
                     //3 X's equal?
-                    if (GeometryUtility.IsEqual(start.StartPoint.X, end.EndPoint.X) ||
-                        GeometryUtility.IsEqual(start.EndPoint.X, end.EndPoint.X))
+                    if (GeometryUtility.IsEpsilonEquals(start.StartPoint.X, end.EndPoint.X) ||
+                        GeometryUtility.IsEpsilonEquals(start.EndPoint.X, end.EndPoint.X))
                     {
                         return true;
                     }
@@ -206,7 +206,7 @@ namespace MathematicalMorphology.src.Utility
             var val = (q.Y - p.Y) * (r.X - q.X) -
                       (q.X - p.X) * (r.Y - q.Y);
 
-            if (GeometryUtility.IsEqual(val, 0.0)) return 0;  // colinear
+            if (GeometryUtility.IsEpsilonEquals(val, 0.0)) return 0;  // colinear
 
             return (val > 0) ? 1 : 2; // clock or counterclock wise
         }
@@ -229,7 +229,7 @@ namespace MathematicalMorphology.src.Utility
                     //so if the intersection point is the same
                     //as the Y value of start or end of Start segment
                     //then it is a T intersection, otherwise false
-                    return GeometryUtility.IsEqual(GetLineSegmentIntersection(start, end).Y, start.StartPoint.Y);
+                    return GeometryUtility.IsEpsilonEquals(GetLineSegmentIntersection(start, end).Y, start.StartPoint.Y);
                 }
                 else if(IsHorizontal(end))
                 {
@@ -238,7 +238,7 @@ namespace MathematicalMorphology.src.Utility
                     //so if the intersection point is the same
                     //as the Y value of start or end of End segment
                     //then it is a T intersection, otherwise false
-                    return GeometryUtility.IsEqual(GetLineSegmentIntersection(start, end).Y, end.StartPoint.Y);
+                    return GeometryUtility.IsEpsilonEquals(GetLineSegmentIntersection(start, end).Y, end.StartPoint.Y);
                 }
                 else if(IsVertical(start))
                 {
@@ -247,7 +247,7 @@ namespace MathematicalMorphology.src.Utility
                     //so if the intersection point is the same
                     //as the X value of start or end of start segment
                     //then it is a T intersection, otherwise false
-                    return GeometryUtility.IsEqual(GetLineSegmentIntersection(start, end).X, start.StartPoint.X);
+                    return GeometryUtility.IsEpsilonEquals(GetLineSegmentIntersection(start, end).X, start.StartPoint.X);
                 }
                 else if (IsVertical(end))
                 {
@@ -256,7 +256,7 @@ namespace MathematicalMorphology.src.Utility
                     //so if the intersection point is the same
                     //as the X value of start or end of end segment
                     //then it is a T intersection, otherwise false
-                    return GeometryUtility.IsEqual(GetLineSegmentIntersection(start, end).X, end.StartPoint.X);
+                    return GeometryUtility.IsEpsilonEquals(GetLineSegmentIntersection(start, end).X, end.StartPoint.X);
                 }
                 
                 //safe from dividing by 0 and getting NaN
@@ -286,12 +286,12 @@ namespace MathematicalMorphology.src.Utility
 
         public static bool IsVertical(Segment segment)
         {
-            return GeometryUtility.IsEqual(segment.StartPoint.X, segment.EndPoint.X);
+            return GeometryUtility.IsEpsilonEquals(segment.StartPoint.X, segment.EndPoint.X);
         }
 
         public static bool IsHorizontal(Segment segment)
         {
-            return GeometryUtility.IsEqual(segment.StartPoint.Y, segment.EndPoint.Y);
+            return GeometryUtility.IsEpsilonEquals(segment.StartPoint.Y, segment.EndPoint.Y);
         }
 
         public static MapPoint GetLineSegmentIntersection(Segment start, Segment end)
@@ -326,112 +326,8 @@ namespace MathematicalMorphology.src.Utility
             var t = numerator / crossProduct;
             var intersection = Add(p, ScalarMult(t, r));
 
-            return intersection;
-
-            ////vertical line
-            //if (GeometryUtility.IsEqual(start.StartPoint.X, start.EndPoint.X))
-            //{
-            //    //if end segment also vertical line, could be parallel or colinear
-            //    if (GeometryUtility.IsEqual(end.StartPoint.X, end.EndPoint.X))  //if x the same  check overlaps
-            //    {
-            //        return IsColinearOrParallel(start, end);
-
-            //    }
-            //    //if x different check if they intersect, the second line must be perpendicular
-            //    //which means the other line is horizontal then they MAY intersect
-            //    else if (GeometryUtility.IsEqual(end.StartPoint.Y, end.EndPoint.Y))
-            //    {
-
-
-            //    }
-            //    else
-            //    {
-            //        return SegmentIntersectionType.NoIntersection;
-            //    }
-
-            //}
-            //else if (GeometryUtility.IsEqual(end.StartPoint.X, end.EndPoint.X))//vertical line
-            //{
-            //    if (GeometryUtility.IsEqual(end.StartPoint.X, end.EndPoint.X))//if x the same  check overlaps
-            //    {
-            //        //  if the y's are within eachother's range overlap otherwise the do not
-            //        if (Math.Min(start.StartPoint.Y, start.EndPoint.Y) < Math.Max(end.StartPoint.Y, end.EndPoint.Y))
-            //        {
-            //            return SegmentIntersectionType.Colinear;
-            //        }
-            //        else
-            //        {
-            //            return SegmentIntersectionType.Parallel;
-            //        }
-            //    }
-            //    else //if x different then they do not intersect
-            //    {
-            //        return SegmentIntersectionType.NoIntersection;
-            //    }
-            //}
-
-            //var A1 = (start.StartPoint.Y - start.EndPoint.Y) / (start.StartPoint.X - start.EndPoint.X);
-            //var A2 = (end.StartPoint.Y - end.EndPoint.Y) / (end.StartPoint.X - end.EndPoint.X);
-
-            //var b1 = start.StartPoint.Y - A1 * start.StartPoint.X;
-            //var b2 = end.StartPoint.Y - A2 * end.StartPoint.X;
-
-            //if (GeometryUtility.IsEqual(A1, A2))
-            //{
-            //    //Parallel lines or overlaps
-            //}
-
-            //var Xa = (b2 - b1) / (A1 - A2);// Once again, pay attention to not dividing by zero
-            //var Ya = A1 * Xa + b1;
-
-
-            //if ((Xa < Math.Max(Math.Min(start.StartPoint.X, start.EndPoint.X), Math.Min(end.StartPoint.X, end.EndPoint.X))) ||
-            //    (Xa > Math.Min(Math.Max(start.StartPoint.X, start.EndPoint.X), Math.Max(start.StartPoint.X, start.EndPoint.X))))
-            //    return SegmentIntersectionType.NoIntersection; // intersection is out of bounds
-            //else
-            //    return SegmentIntersectionType.Crosses; // intersection is within range
+            return intersection;         
         }
-
-        //public static bool IsColinear(Segment start, Segment end)
-        //{
-        //    //check if lines are parallel 
-        //    //http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
-        //    int o1 = Orientation(start.StartPoint, start.EndPoint, end.StartPoint);
-        //    int o2 = Orientation(start.StartPoint, start.EndPoint, end.EndPoint);
-        //    int o3 = Orientation(end.StartPoint, end.EndPoint, start.StartPoint);
-        //    int o4 = Orientation(end.StartPoint, end.EndPoint, start.EndPoint);
-
-        //    // General case
-        //    if (o1 != o2 && o3 != o4)
-        //        return false;
-
-        //    // Special Cases
-        //    // p1, q1 and p2 are colinear and p2 lies on segment p1q1
-        //    if (o1 == 0 && OnSegment(start.StartPoint, end.StartPoint, start.EndPoint))
-        //    {
-        //        return true;
-        //    }
-
-        //    // p1, q1 and p2 are colinear and q2 lies on segment p1q1
-        //    if (o2 == 0 && OnSegment(start.StartPoint, end.EndPoint, start.EndPoint))
-        //    {
-        //        return true;
-        //    }
-
-        //    // p2, q2 and p1 are colinear and p1 lies on segment p2q2
-        //    if (o3 == 0 && OnSegment(end.StartPoint, start.StartPoint, end.EndPoint))
-        //    {
-        //        return true;
-        //    }
-
-        //    // p2, q2 and q1 are colinear and q1 lies on segment p2q2
-        //    if (o4 == 0 && OnSegment(end.StartPoint, start.EndPoint, end.EndPoint))
-        //    {
-        //        return true;
-        //    }
-
-        //    return false; // Doesn't fall in any of the above cases
-        //}
 
         // Given three colinear points p, q, r, the function checks if
         // point q lies on line segment 'pr'

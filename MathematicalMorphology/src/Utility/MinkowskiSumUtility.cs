@@ -113,7 +113,7 @@ namespace MathematicalMorphology.src.Utility
                 for(var index2 = index +1; index2 < segments.Count -1; index2++)
                 {
                     var secondSeg = segments[index2];
-                    if(secondSeg.IsEqual(currentSeg))
+                    if(secondSeg.SegmentEpsilonEquals(currentSeg))
                     {
                         return true;
                     }
@@ -130,7 +130,7 @@ namespace MathematicalMorphology.src.Utility
                 for (var index2 = index + 1; index2 < segments.Count - 1; index2++)
                 {
                     var secondSeg = segments[index2];
-                    if (secondSeg.IsEqual(currentSeg))
+                    if (secondSeg.SegmentEpsilonEquals(currentSeg))
                     {
                         segments.RemoveAt(index);
                         return segments;
@@ -147,8 +147,8 @@ namespace MathematicalMorphology.src.Utility
             {
                 segments = RemoveDuplicates(segments);
             }
-          
 
+            Console.WriteLine("Size break up polygon " + segments.Count);
             if(SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
             {
                 return segments;
@@ -271,7 +271,7 @@ namespace MathematicalMorphology.src.Utility
 
         private static bool SegmentIsValid(Segment seg1)
         {
-            return seg1 != null && seg1.StartPoint.IsEqual(seg1.EndPoint) == false;
+            return seg1 != null && seg1.StartPoint.MapPointEpsilonEquals(seg1.EndPoint) == false;
         }
 
         public static Segment FindRightMostSegment(Segment segment, List<Segment> connectedSegments)
@@ -383,7 +383,7 @@ namespace MathematicalMorphology.src.Utility
                 {
                     outerMostEnd = point;
                 }
-                else if(GeometryUtility.IsEqual(point.X, outerMostEnd.X) && 
+                else if(GeometryUtility.IsEpsilonEquals(point.X, outerMostEnd.X) && 
                         point.Y < outerMostEnd.Y)
                 {
                     outerMostEnd = point;
