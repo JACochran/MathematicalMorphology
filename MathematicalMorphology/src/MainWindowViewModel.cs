@@ -77,7 +77,6 @@ namespace MathematicalMorphology.src
             {
                 segB.AddSegmentToMap(mapView, Colors.DarkGreen, "Modified by B verticies");
             }
-
         }
 
         private void ExecuteCalculateMinkowskiSumConvexHull(MapView mapView)
