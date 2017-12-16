@@ -2,7 +2,9 @@
 using Esri.ArcGISRuntime.Layers;
 using Esri.ArcGISRuntime.Symbology;
 using MathematicalMorphology.src;
+using MathematicalMorphology.src.Utility;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -50,19 +52,15 @@ namespace MathematicalMorphology
             try
             {
                 var drawShape = (DrawShape)DrawShapes.SelectedItem;
-
+                
                 GraphicsOverlay graphicsOverlay;
-                graphicsOverlay = drawShape == DrawShape.Point ? MyMapView.GraphicsOverlays["PointGraphicsOverlay"] as GraphicsOverlay :
+                graphicsOverlay = drawShape == DrawShape.Point ? MyMapView.GraphicsOverlays[MapUtility.PointOverlayName] as GraphicsOverlay :
                            ((drawShape == DrawShape.Polyline || drawShape == DrawShape.Freehand || drawShape == DrawShape.LineSegment) ?
-                  MyMapView.GraphicsOverlays["PolylineGraphicsOverlay"] as GraphicsOverlay : MyMapView.GraphicsOverlays["PolygonGraphicsOverlay"] as GraphicsOverlay);
+                  MyMapView.GraphicsOverlays[MapUtility.PolylineOverlayName] as GraphicsOverlay : MyMapView.GraphicsOverlays[MapUtility.PolygonOverlayName] as GraphicsOverlay);
 
                 var progress = new Progress<GeometryEditStatus>();
                 progress.ProgressChanged += (a, b) =>
                 {
-                    //if (b.GeometryEditAction == GeometryEditAction..CompletedEdit)
-                    //    if (_editGraphic != null)
-                    //        _editGraphic.IsSelected = false;
-
                 };
 
                 var content = (sender as Button).Content.ToString();
@@ -122,9 +120,7 @@ namespace MathematicalMorphology
 
             if (canSelectManyFeatures())
             {
-                var polylineOverlay = MyMapView.GraphicsOverlays["PolylineGraphicsOverlay"];
-                var polylineGraphic = await polylineOverlay.HitTestAsync(MyMapView, e.Position);
-                var polygonOverlay = MyMapView.GraphicsOverlays["PolygonGraphicsOverlay"];
+                var polygonOverlay = MyMapView.GraphicsOverlays[MapUtility.PolygonOverlayName];
                 var polygonGraphic = await polygonOverlay.HitTestAsync(MyMapView, e.Position);
 
                 var viewModel = this.DataContext as MainWindowViewModel;
@@ -132,38 +128,27 @@ namespace MathematicalMorphology
 
                 if (polygonGraphic != null)
                 {
-                    polygonGraphic.IsSelected = !polygonGraphic.IsSelected;
+                    polygonGraphic.IsSelected = true;
                     if(viewModel.FirstSelectedGraphic != null && viewModel.SecondSelectedGraphic != null && polygonGraphic.IsSelected)
                     {
+                        var originalGraphic = polygonOverlay.Graphics.First(graphic => graphic.Geometry.IsEqual(viewModel.SecondSelectedGraphic.Geometry));
+                        originalGraphic.IsSelected = false;
                         viewModel.SecondSelectedGraphic.IsSelected = false;
                         viewModel.SecondSelectedGraphic = null;
                     }
                 }
-
-                if (polylineGraphic != null)
-                {
-                    polylineGraphic.IsSelected = !polylineGraphic.IsSelected;
-                    if (viewModel.FirstSelectedGraphic != null && viewModel.SecondSelectedGraphic != null && polylineGraphic.IsSelected)
-                    {
-                        viewModel.SecondSelectedGraphic.IsSelected = false;
-                        viewModel.SecondSelectedGraphic = null;
-                    }
-                }
-
-
              
                 if(viewModel.FirstSelectedGraphic == null && viewModel.SecondSelectedGraphic == null)
                 {
-                    viewModel.FirstSelectedGraphic = polylineGraphic;
-                    viewModel.SecondSelectedGraphic = polygonGraphic;
+                    viewModel.FirstSelectedGraphic = polygonGraphic;
                 }
                 else if(viewModel.FirstSelectedGraphic == null) 
                 {
-                    viewModel.FirstSelectedGraphic = polygonGraphic != null ? polygonGraphic : polylineGraphic;
+                    viewModel.FirstSelectedGraphic = polygonGraphic;
                 }
                 else if(viewModel.SecondSelectedGraphic == null)
                 {
-                    viewModel.SecondSelectedGraphic = polygonGraphic != null ? polygonGraphic : polylineGraphic;
+                    viewModel.SecondSelectedGraphic = polygonGraphic;
                 }
                            
 
@@ -172,9 +157,9 @@ namespace MathematicalMorphology
             {
                 var drawShape = (DrawShape)DrawShapes.SelectedItem;
                 GraphicsOverlay graphicsOverlay;
-                graphicsOverlay = drawShape == DrawShape.Point ? MyMapView.GraphicsOverlays["PointGraphicsOverlay"] as GraphicsOverlay :
+                graphicsOverlay = drawShape == DrawShape.Point ? MyMapView.GraphicsOverlays[MapUtility.PointOverlayName] as GraphicsOverlay :
                            ((drawShape == DrawShape.Polyline || drawShape == DrawShape.Freehand || drawShape == DrawShape.LineSegment) ?
-                  MyMapView.GraphicsOverlays["PolylineGraphicsOverlay"] as GraphicsOverlay : MyMapView.GraphicsOverlays["PolygonGraphicsOverlay"] as GraphicsOverlay);
+                  MyMapView.GraphicsOverlays[MapUtility.PolylineOverlayName] as GraphicsOverlay : MyMapView.GraphicsOverlays[MapUtility.PolygonOverlayName] as GraphicsOverlay);
 
 
                 var graphic = await graphicsOverlay.HitTestAsync(MyMapView, e.Position);
@@ -197,6 +182,28 @@ namespace MathematicalMorphology
             }
         }
 
-          
+        private void CanSelectManyFeatures_Checked(object sender, RoutedEventArgs e)
+        {
+            var polygonOverlay = MyMapView.GraphicsOverlays[MapUtility.PolygonOverlayName];
+            foreach(var graphic in polygonOverlay.Graphics)
+            {
+                graphic.IsSelected = false;
+            }
+            var viewModel = this.DataContext as MainWindowViewModel;
+            viewModel.FirstSelectedGraphic = null;
+            viewModel.SecondSelectedGraphic = null;
+        }
+
+        private void CanSelectManyFeatures_Unchecked(object sender, RoutedEventArgs e)
+        {
+            var polygonOverlay = MyMapView.GraphicsOverlays[MapUtility.PolygonOverlayName];
+            foreach (var graphic in polygonOverlay.Graphics)
+            {
+                graphic.IsSelected = false;
+            }
+            var viewModel = this.DataContext as MainWindowViewModel;
+            viewModel.FirstSelectedGraphic = null;
+            viewModel.SecondSelectedGraphic = null;
+        }
     }
 }

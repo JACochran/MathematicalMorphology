@@ -75,7 +75,7 @@
                 </StackPanel>
 
                 <StackPanel>
-                    <CheckBox x:Name="CanSelectManyFeatures" Content="Select Many Features" IsChecked="{Binding CanSelectManyFeatures}">
+                    <CheckBox x:Name="CanSelectManyFeatures" Content="Select Many Features" Checked="CanSelectManyFeatures_Checked" Unchecked="CanSelectManyFeatures_Unchecked" IsChecked="{Binding CanSelectManyFeatures}">
                     </CheckBox>
                 </StackPanel>
                
