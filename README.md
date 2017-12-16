@@ -1,6 +1,8 @@
 # MathematicalMorphology
 
 A Mapping application that can calculate the Minkowski Sum of two polygons using two different approaches.
+The first approach is the Minkowski Sum with the Convex Hull which only works with two Convex Polygons 
+
 
 Will also be able to visualize the various steps of how the Minkowski Sum is calculated.
 After drawing two polygons on the map
@@ -13,6 +15,7 @@ After drawing two polygons on the map
 ### Prerequisites
 
 The only dependency is the Esri Runtime .NET sdk 10.2.7 https://developers.arcgis.com/net/10-2/
+Also must use Visual Studio to run the application.
 
 
 ### Installing
