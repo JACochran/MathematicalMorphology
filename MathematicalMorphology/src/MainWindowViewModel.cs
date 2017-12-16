@@ -84,7 +84,7 @@ namespace MathematicalMorphology.src
             var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
             var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
             var polygon = polygonA.CalculateMinkowskiSumPolygons(polygonB, mapView);
-            polygon.AddPolygonToMap(mapView, Color.FromArgb(55, Colors.LightBlue.R, Colors.LightBlue.G, Colors.LightBlue.B));
+            polygon.AddPolygonToMap(mapView, Color.FromArgb(85, Colors.Gray.R, Colors.Gray.G, Colors.Gray.B));
         }
 
         private void ExecuteClearMap(MapView mapview)
@@ -150,7 +150,7 @@ namespace MathematicalMorphology.src
                 return;
             }
 
-            polygon.AddPolygonToMap(mapView, Color.FromArgb(75, Colors.Snow.R, Colors.Snow.G, Colors.Snow.B));
+            polygon.AddPolygonToMap(mapView, Color.FromArgb(75, Colors.Gray.R, Colors.Gray.G, Colors.Gray.B));
             mapView.SetViewAsync(polygon);
         }  
 
