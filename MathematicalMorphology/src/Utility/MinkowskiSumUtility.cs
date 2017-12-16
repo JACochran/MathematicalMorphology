@@ -175,90 +175,13 @@ namespace MathematicalMorphology.src.Utility
             {
                 segments = RemoveDuplicates(segments);
             }
-
-            Console.WriteLine("Break up poly: " + segments.Count());
+            
             if (SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
             {
                 return segments;
             }
 
-            return BreakUpPolygon(SolveIntersections(segments));
-        }
-
-        public static List<Segment> SolveIntersections(List<Segment> segments)
-        {          
-            for (var index = 0; index < segments.Count; index++)
-            {
-                var firstSegment = segments[index];
-
-                for (var secondIndex = index + 1; secondIndex < segments.Count -1; secondIndex++)
-                {
-                    var secondSegment = segments[secondIndex];
-
-                    if (SegmentIntersectionUtility.SegmentsIntersect(firstSegment, secondSegment))
-                    {
-                        segments.RemoveAt(secondIndex);
-                        segments.RemoveAt(index);
-                        var brokenSegments = new List<Segment>();
-                        //3 segments
-                        if(SegmentIntersectionUtility.IsCollinear(firstSegment, secondSegment))
-                        {
-                            //make sure that the start and end points aren't the only things connecting them
-                            //2 segments for that
-                            //otherwise 3
-                            var points = new List<MapPoint>() { firstSegment.StartPoint, firstSegment.EndPoint, secondSegment.StartPoint, secondSegment.EndPoint };
-                            points.Sort((mp1, mp2) => mp1.X.CompareTo(mp2.X));
-                            brokenSegments.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(points[0], points[1]));
-                            brokenSegments.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(points[1], points[2]));
-                        }
-                        //3 segments
-                        else if(SegmentIntersectionUtility.IsTIntersection(firstSegment, secondSegment))
-                        {
-                            var intersectionPoint = SegmentIntersectionUtility.GetLineSegmentIntersection(firstSegment, secondSegment);
-                            //var seg1 = new Esri.ArcGISRuntime.Geometry.LineSegment(Math.Min)
-                            var segment1 = new Esri.ArcGISRuntime.Geometry.LineSegment(firstSegment.StartPoint, intersectionPoint);
-                            var segment2 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, firstSegment.EndPoint);
-                            var segment3 = new Esri.ArcGISRuntime.Geometry.LineSegment(secondSegment.StartPoint, intersectionPoint);
-                            var segment4 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, secondSegment.EndPoint);
-
-                            if(!segment1.StartPoint.MapPointEpsilonEquals(segment1.EndPoint))
-                            {
-                                brokenSegments.Add(segment1);
-                            }
-                            if (!segment2.StartPoint.MapPointEpsilonEquals(segment2.EndPoint))
-                            {
-                                brokenSegments.Add(segment2);
-                            }
-                            if (!segment3.StartPoint.MapPointEpsilonEquals(segment3.EndPoint))
-                            {
-                                brokenSegments.Add(segment3);
-                            }
-                            if (!segment4.StartPoint.MapPointEpsilonEquals(segment4.EndPoint))
-                            {
-                                brokenSegments.Add(segment4);
-                            }
-
-                        }
-                        else
-                        {
-                            var intersectionPoint = SegmentIntersectionUtility.GetLineSegmentIntersection(firstSegment, secondSegment);
-                            var segment1 = new Esri.ArcGISRuntime.Geometry.LineSegment(firstSegment.StartPoint, intersectionPoint);
-                            var segment2 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, firstSegment.EndPoint);
-                            var segment3 = new Esri.ArcGISRuntime.Geometry.LineSegment(secondSegment.StartPoint, intersectionPoint);
-                            var segment4 = new Esri.ArcGISRuntime.Geometry.LineSegment(intersectionPoint, secondSegment.EndPoint);
-
-                            brokenSegments.AddRange(new List<Segment>() { segment1, segment2, segment3, segment4 });
-                        }
-                        
-                        segments.AddRange(brokenSegments);                        
-                        return segments;
-                    }
-                }
-            }
-
-            Console.WriteLine("NO INTERSECTIONS SHOULD STOP!");
-            return segments;
-            //throw new ArgumentException("No segments intersect");
+            return BreakUpPolygon(SegmentIntersectionUtility.SolveIntersections(segments));
         }
 
         private static bool SegmentIsValid(Segment seg1)

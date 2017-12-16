@@ -8,7 +8,6 @@ namespace MathematicalMorphology.src.Utility
 {
     public static class SegmentIntersectionUtility
     {
-
         public static bool SegmentsIntersect(Segment segment1, Segment segment2)
         {
             return GetLineSegmentIntersection(segment1, segment2) != null;
@@ -343,7 +342,80 @@ namespace MathematicalMorphology.src.Utility
         public static bool AnySegmentInstersect(List<Segment> segments)
         {
             var originalSize = segments.Count();
-            return MinkowskiSumUtility.SolveIntersections(segments).Count() > originalSize;
+            return SolveIntersections(segments).Count() > originalSize;
+        }
+
+        public static List<Segment> SolveIntersections(List<Segment> segments)
+        {
+            for (var index = 0; index < segments.Count; index++)
+            {
+                var firstSegment = segments[index];
+
+                for (var secondIndex = index + 1; secondIndex < segments.Count - 1; secondIndex++)
+                {
+                    var secondSegment = segments[secondIndex];
+
+                    if (SegmentsIntersect(firstSegment, secondSegment))
+                    {
+                        segments.RemoveAt(secondIndex);
+                        segments.RemoveAt(index);
+                        var brokenSegments = new List<Segment>();
+                        //3 segments
+                        if (IsCollinear(firstSegment, secondSegment))
+                        {
+                            //make sure that the start and end points aren't the only things connecting them
+                            //2 segments for that
+                            //otherwise 3
+                            var points = new List<MapPoint>() { firstSegment.StartPoint, firstSegment.EndPoint, secondSegment.StartPoint, secondSegment.EndPoint };
+                            points.Sort((mp1, mp2) => mp1.X.CompareTo(mp2.X));
+                            brokenSegments.Add(new LineSegment(points[0], points[1]));
+                            brokenSegments.Add(new LineSegment(points[1], points[2]));
+                        }
+                        //3 segments
+                        else if (IsTIntersection(firstSegment, secondSegment))
+                        {
+                            var intersectionPoint = GetLineSegmentIntersection(firstSegment, secondSegment);
+                            //var seg1 = new Esri.ArcGISRuntime.Geometry.LineSegment(Math.Min)
+                            var segment1 = new LineSegment(firstSegment.StartPoint, intersectionPoint);
+                            var segment2 = new LineSegment(intersectionPoint, firstSegment.EndPoint);
+                            var segment3 = new LineSegment(secondSegment.StartPoint, intersectionPoint);
+                            var segment4 = new LineSegment(intersectionPoint, secondSegment.EndPoint);
+
+                            if (!segment1.StartPoint.MapPointEpsilonEquals(segment1.EndPoint))
+                            {
+                                brokenSegments.Add(segment1);
+                            }
+                            if (!segment2.StartPoint.MapPointEpsilonEquals(segment2.EndPoint))
+                            {
+                                brokenSegments.Add(segment2);
+                            }
+                            if (!segment3.StartPoint.MapPointEpsilonEquals(segment3.EndPoint))
+                            {
+                                brokenSegments.Add(segment3);
+                            }
+                            if (!segment4.StartPoint.MapPointEpsilonEquals(segment4.EndPoint))
+                            {
+                                brokenSegments.Add(segment4);
+                            }
+
+                        }
+                        else
+                        {
+                            var intersectionPoint = GetLineSegmentIntersection(firstSegment, secondSegment);
+                            var segment1 = new LineSegment(firstSegment.StartPoint, intersectionPoint);
+                            var segment2 = new LineSegment(intersectionPoint, firstSegment.EndPoint);
+                            var segment3 = new LineSegment(secondSegment.StartPoint, intersectionPoint);
+                            var segment4 = new LineSegment(intersectionPoint, secondSegment.EndPoint);
+
+                            brokenSegments.AddRange(new List<Segment>() { segment1, segment2, segment3, segment4 });
+                        }
+
+                        segments.AddRange(brokenSegments);
+                        return segments;
+                    }
+                }
+            }
+            return segments;
         }
 
     }
