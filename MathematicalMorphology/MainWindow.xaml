@@ -67,7 +67,7 @@
                     <Button Content="Show Angles" Command="{Binding ShowAnglesCommand}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
                     <Button Content="Modified Segments" Command="{Binding GetModifiedSegments}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
                     <Button Content="Calculate Arrangement" Command="{Binding CalculateArrangement}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
-                    <Button Content="Simplify Polygon" Command="{Binding SimplifyPolygon}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
+                   
                     <Button Content="Calculate Minkowski Sum Convolution" Command="{Binding CalculateMinkowskiSum}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
                     <Button Content="Calculate Minkowski Sum Convex Hull" Command="{Binding CalculateMinkowskiSumConvexHull}" CommandParameter="{Binding ElementName=MyMapView}" Padding="10" Margin="5" />
                    

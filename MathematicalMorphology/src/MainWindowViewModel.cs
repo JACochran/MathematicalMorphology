@@ -25,21 +25,7 @@ namespace MathematicalMorphology.src
             ShowAnglesCommand = new RelayCommand<MapView>(ExecuteShowAngles, CanExecuteMinkowskiSum);
             ClearAllCommand = new RelayCommand<MapView>(ExecuteClearMap);
             CalculateArrangement = new RelayCommand<MapView>(ExecuteCalculateArrangement, CanExecuteMinkowskiSum);
-            SimplifyPolygon = new RelayCommand<MapView>(ExecuteSimplifyPolygon, CanExecuteMinkowskiSum);
         }       
-
-        private void ExecuteSimplifyPolygon(MapView mapView)
-        {
-            var polygonA = (FirstSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
-            var polygonB = (SecondSelectedGraphic.Geometry as Polygon).OrderVerticiesCounterClockwise();
-            var seg1 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonA, polygonB);
-            var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA);
-
-            seg1.AddRange(seg2);
-            var arrangement = MinkowskiSumUtility.BreakUpPolygon(seg1);
-            var polygon  = MinkowskiSumUtility.SimplifyPolygon(arrangement);
-            polygon.AddPolygonToMap(mapView, Color.FromArgb(70, Colors.Green.R, Colors.Green.G, Colors.Green.B));
-        }
 
         private void ExecuteCalculateArrangement(MapView mapView)
         {
@@ -124,7 +110,6 @@ namespace MathematicalMorphology.src
         public RelayCommand<MapView> ShowAnglesCommand { get; set; }
         public RelayCommand<MapView> ClearAllCommand { get; set; }
         public RelayCommand<MapView> CalculateArrangement { get; private set; }
-        public RelayCommand<MapView> SimplifyPolygon { get; private set; }
 
         private void ExecuteCalculateMinkowskiSum(MapView mapView)
         {
@@ -198,7 +183,6 @@ namespace MathematicalMorphology.src
                 ShowAnglesCommand.RaiseCanExecuteChanged();
                 GetModifiedSegments.RaiseCanExecuteChanged();
                 CalculateArrangement.RaiseCanExecuteChanged();
-                SimplifyPolygon.RaiseCanExecuteChanged();
             }
         }
 
@@ -219,7 +203,6 @@ namespace MathematicalMorphology.src
                 ShowAnglesCommand.RaiseCanExecuteChanged();
                 GetModifiedSegments.RaiseCanExecuteChanged();
                 CalculateArrangement.RaiseCanExecuteChanged();
-                SimplifyPolygon.RaiseCanExecuteChanged();
             }
         }
     }
