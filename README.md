@@ -1,15 +1,13 @@
 # MathematicalMorphology
 
 A Mapping application that can calculate the Minkowski Sum of two polygons using two different approaches.
-The first approach is the Minkowski Sum with the Convex Hull which only works with two Convex Polygons 
+The first approach is the Minkowski Sum with the Convex Hull and the second is Minkowski sum with Convolution.
 
-
-Will also be able to visualize the various steps of how the Minkowski Sum is calculated.
-After drawing two polygons on the map
+See the Wiki for some helpful pictures! And steps on how to use the program!
 
 
 ## Getting Started
-
+Read the Wiki
 
 
 ### Prerequisites
