@@ -7,7 +7,7 @@ namespace MathematicalMorphology.src.Utility
 {
     public static class GeometryUtility
     {
-        public const double Epsilon = 1e-7;
+        public const double Epsilon = 1e-5;
         public const double RotationAngle = 0.5;
 
         /**

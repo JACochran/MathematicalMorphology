@@ -95,7 +95,7 @@ namespace MathematicalMorphology.src.Utility
             //combine the list
             modifiedBSegments.AddRange(modifiedASegments);
             //Take the resulting segments from the modification and calculate the Arrangement:
-            var segments = BreakUpPolygon(modifiedBSegments);
+            var segments = BreakUpPolygon(modifiedBSegments, modifiedBSegments.Count());
 
             //trace the boundary of the arrangement
             return SimplifyPolygon(segments);
@@ -206,7 +206,7 @@ namespace MathematicalMorphology.src.Utility
         /// </summary>
         /// <param name="segments">list of segments to break apart by their intersections</param>
         /// <returns>list of segments that are broken by their intersections</returns>
-        public static List<Segment> BreakUpPolygon(List<Segment> segments)
+        public static List<Segment> BreakUpPolygon(List<Segment> segments, int largestSize)
         {
             //remove any duplicate segments
             //otherwise there will be infinte intersections
@@ -215,14 +215,19 @@ namespace MathematicalMorphology.src.Utility
                 segments = RemoveDuplicates(segments);
             }
             
+            
             //if there are no more intersections return the segments passed in
-            if (SegmentIntersectionUtility.AnySegmentInstersect(segments) == false)
+            if (SegmentIntersectionUtility.AnySegmentInstersect(segments) == false || segments.Count() <= largestSize)
             {
                 return segments;
             }
 
+            largestSize = segments.Count();
+            Console.Out.WriteLine("Segments Count: " + largestSize);
+
+
             //otherwise break up the polygon by the first intersection found
-            return BreakUpPolygon(SegmentIntersectionUtility.SolveIntersections(segments));
+            return BreakUpPolygon(SegmentIntersectionUtility.SolveIntersections(segments), largestSize);
         }
 
         /// <summary>
@@ -311,6 +316,10 @@ namespace MathematicalMorphology.src.Utility
                 if(segment.EndPoint.MapPointEpsilonEquals(connectedSegment.EndPoint))
                 {
                     connectedList.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(segment.EndPoint, segment.StartPoint));
+                }
+                else if (segment.StartPoint.MapPointEpsilonEquals(connectedSegment.EndPoint))
+                {
+                    connectedList.Add(new Esri.ArcGISRuntime.Geometry.LineSegment(segment.StartPoint, segment.EndPoint));
                 }
             }
 

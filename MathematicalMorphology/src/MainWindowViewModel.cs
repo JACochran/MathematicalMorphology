@@ -35,7 +35,7 @@ namespace MathematicalMorphology.src
             var seg2 = MinkowskiSumUtility.GetAugmentationForPolygon(polygonB, polygonA);
 
             seg1.AddRange(seg2);
-            var arrangement = MinkowskiSumUtility.BreakUpPolygon(seg1);
+            var arrangement = MinkowskiSumUtility.BreakUpPolygon(seg1, seg1.Count());
             
             foreach(var segment in arrangement)
             {
