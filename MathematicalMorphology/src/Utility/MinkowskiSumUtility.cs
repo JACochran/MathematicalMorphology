@@ -127,9 +127,10 @@ namespace MathematicalMorphology.src.Utility
             {
                 var segmentsConnected = FindConnectedSegments(currentSegment, segments);
                 
-                var rightmostSegment = FindRightMostSegment(currentSegment, segmentsConnected); 
+                var rightmostSegment = FindRightMostSegment(currentSegment, segmentsConnected);
 
-                polygonSimple.AddPoints(new List<MapPoint>() { rightmostSegment.StartPoint, rightmostSegment.EndPoint });
+                polygonSimple.AddPoint(rightmostSegment.EndPoint);
+                //polygonSimple.AddPoints(new List<MapPoint>() { rightmostSegment.StartPoint, rightmostSegment.EndPoint });
 
                 currentSegment = rightmostSegment;
                 if(currentSegment.EndPoint.MapPointEpsilonEquals(outermostSegment.StartPoint))// || closedList.Contains(currentSegment))
@@ -309,7 +310,7 @@ namespace MathematicalMorphology.src.Utility
         /// <returns>a list of segments whose startpoint is connected to the connectedSegment's end point</returns>
         private static List<Segment> FindConnectedSegments(Segment connectedSegment, List<Segment> segments)
         {
-            var connectedList = segments.Where(segment => segment.StartPoint.MapPointEpsilonEquals(connectedSegment.EndPoint)).ToList();
+            var connectedList = new List<Segment>();
             foreach(var segment in segments)
             {
                 //reverse the segment if connected in wrong way (wrong way is not in counter-clockwise order)
@@ -366,22 +367,45 @@ namespace MathematicalMorphology.src.Utility
                                                               segment.EndPoint  .MapPointEpsilonEquals(minXPoint))
                                             .Select(segment => segment.StartPoint.MapPointEpsilonEquals(minXPoint) ? segment.EndPoint : segment.StartPoint);
 
-            var outerMostEnd = pointsConnectedTo.First();
+            MapPoint outerMostEndQuad1 = null;
+            MapPoint outerMostEndQuad4 = null;
             foreach(var point in pointsConnectedTo)
             {
-                if(point.X < outerMostEnd.X &&
-                   point.Y < outerMostEnd.Y)
+                var angle = new Esri.ArcGISRuntime.Geometry.LineSegment(minXPoint, point).CalculateAngle();
+
+
+                // if the angle is in quadrant 1 pick the largest angle
+                if (angle >= 0.0 && angle <= 90.0)
                 {
-                    outerMostEnd = point;
+                    if (outerMostEndQuad1 == null)
+                    {
+                        outerMostEndQuad1 = point;
+                    }
+                    else if(new Esri.ArcGISRuntime.Geometry.LineSegment(minXPoint, outerMostEndQuad1).CalculateAngle() < angle)
+                    {
+                        outerMostEndQuad1 = point;
+                    }
                 }
-                else if(GeometryUtility.IsEpsilonEquals(point.X, outerMostEnd.X) && 
-                        point.Y < outerMostEnd.Y)
+                //if the angle is in quadrant 4 pick the smallest angle
+                else if (angle >= 270.0 && angle <= 360.0)
                 {
-                    outerMostEnd = point;
+                    if(outerMostEndQuad4 == null)
+                    {
+                        outerMostEndQuad4 = point;
+                    }
+                    else if( new Esri.ArcGISRuntime.Geometry.LineSegment(minXPoint, outerMostEndQuad4).CalculateAngle() > angle)
+                    {
+                        outerMostEndQuad4 = point;
+                    }
+                }
+                else
+                {
+                    //SHouldnt ever happen
                 }
             }
 
-            return new Esri.ArcGISRuntime.Geometry.LineSegment(minXPoint, outerMostEnd);
+            return outerMostEndQuad4 != null ? new Esri.ArcGISRuntime.Geometry.LineSegment(minXPoint, outerMostEndQuad4)
+                                             : new Esri.ArcGISRuntime.Geometry.LineSegment(outerMostEndQuad1, minXPoint);
         }
 
         /**
