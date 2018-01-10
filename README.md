@@ -28,6 +28,7 @@ Click Run!
 ## Authors
 
 * **Jenifer Cochran**
+* **Steven Lander**
 
 
 ## License
